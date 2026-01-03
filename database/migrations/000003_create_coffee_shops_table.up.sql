@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS "coffee_shops" (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    address TEXT NOT NULL,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    open_time TIME NOT NULL,
+    close_time TIME NOT NULL,
+    parking BOOLEAN NOT NULL,
+    prayer_room BOOLEAN NOT NULL,
+    wifi BOOLEAN NOT NULL,
+    gofood BOOLEAN NOT NULL,
+    instagram VARCHAR(50),
+    created_by_id INT REFERENCES users(id) ON DELETE CASCADE,
+    updated_by_id INT REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    category_id INT REFERENCES categories(id) ON DELETE CASCADE
+);

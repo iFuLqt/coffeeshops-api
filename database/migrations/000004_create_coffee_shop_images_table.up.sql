@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS "coffee_shop_images" (
+    id SERIAL PRIMARY KEY,
+    coffee_shop_id INT REFERENCES coffee_shops(id) ON DELETE CASCADE,
+    image TEXT NOT NULL,
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
