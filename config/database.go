@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/ifulqt/coffeeshops-api/database/seeds"
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -31,8 +32,10 @@ func (cfg Config) ConnectionPostgres() (*Postgres, error) {
 		return nil, err
 	}
 
+	seeds.UserSeeder(db)
+
 	sqlDB.SetMaxIdleConns(cfg.Psql.DBMaxIdle)
 	sqlDB.SetMaxOpenConns(cfg.Psql.DBMaxOpen)
-	
+
 	return &Postgres{DB: db}, nil
 }
