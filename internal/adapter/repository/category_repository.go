@@ -39,7 +39,14 @@ func (c *categoryRepository) CreateCategory(ctx context.Context, req entity.Cate
 
 // DeleteCategory implements [CategoryRepository].
 func (c *categoryRepository) DeleteCategory(ctx context.Context, id int) error {
-	panic("unimplemented")
+	var modelCategory model.Category
+	err := c.db.Where("id = ?", id).Delete(&modelCategory).Error
+	if err != nil {
+		code := "[REPOSITORY] DeleteCategory - 2"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 // GetCategories implements [CategoryRepository].
@@ -55,11 +62,11 @@ func (c *categoryRepository) GetCategories(ctx context.Context) ([]entity.Catego
 	resps := []entity.CategoryEntity{}
 	for _, val := range modelCategory {
 		resps = append(resps, entity.CategoryEntity{
-			ID: val.ID,
+			ID:   val.ID,
 			Name: val.Name,
 			Slug: val.Slug,
 			User: entity.UserEntity{
-				ID: val.User.ID,
+				ID:   val.User.ID,
 				Name: val.User.Name,
 			},
 		})
@@ -80,12 +87,12 @@ func (c *categoryRepository) GetCategoryByID(ctx context.Context, id int) (*enti
 	}
 
 	resp := entity.CategoryEntity{
-		ID: categoryModel.ID,
+		ID:   categoryModel.ID,
 		Name: categoryModel.Name,
 		Slug: categoryModel.Slug,
 		User: entity.UserEntity{
-			ID: categoryModel.User.ID,
-			Name: categoryModel.User.Name,
+			ID:    categoryModel.User.ID,
+			Name:  categoryModel.User.Name,
 			Email: categoryModel.User.Email,
 		},
 	}
