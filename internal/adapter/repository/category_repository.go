@@ -102,7 +102,18 @@ func (c *categoryRepository) GetCategoryByID(ctx context.Context, id int) (*enti
 
 // UpdateCategory implements [CategoryRepository].
 func (c *categoryRepository) UpdateCategory(ctx context.Context, req entity.CategoryEntity) error {
-	panic("unimplemented")
+	modelCategory := model.Category{
+		Name:        req.Name,
+		Slug:        req.Slug,
+		CreatedByID: req.User.ID,
+	}
+	err := c.db.Where("id = ?", req.ID).Updates(modelCategory).Error
+	if err != nil {
+		code := "[REPOSITORY] UpdateCategory - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 func NewCategoryRepository(db *gorm.DB) CategoryRepository {

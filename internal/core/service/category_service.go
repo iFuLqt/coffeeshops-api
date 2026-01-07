@@ -71,7 +71,16 @@ func (c *categoryService) GetCategoryByID(ctx context.Context, id int) (*entity.
 
 // UpdateCategory implements [CategoryService].
 func (c *categoryService) UpdateCategory(ctx context.Context, req entity.CategoryEntity) error {
-	panic("unimplemented")
+	slug := helper.GenerateSlug(req.Name)
+	req.Slug = slug
+
+	err := c.CategoryRepository.UpdateCategory(ctx, req)
+	if err != nil {
+		code := "[SERVICE] UpdateCategory - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 func NewCategoryService(categoryRepo repository.CategoryRepository) CategoryService {

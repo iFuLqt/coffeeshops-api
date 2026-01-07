@@ -66,6 +66,7 @@ func RunServer() {
 	category.Get("/", categoryHandler.GetCategories)
 	category.Get("/:categoryID", categoryHandler.GetCategoryByID)
 	category.Delete("/:categoryID", categoryHandler.DeleteCategory)
+	category.Put("/:categoryID", categoryHandler.UpdateCategory)
 
 	go func() {
 		if cfg.App.AppPort == "" {
