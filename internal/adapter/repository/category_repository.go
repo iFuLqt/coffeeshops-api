@@ -71,7 +71,26 @@ func (c *categoryRepository) GetCategories(ctx context.Context) ([]entity.Catego
 
 // GetCategoryByID implements [CategoryRepository].
 func (c *categoryRepository) GetCategoryByID(ctx context.Context, id int) (*entity.CategoryEntity, error) {
-	panic("unimplemented")
+	var categoryModel model.Category
+	err := c.db.Where("id = ?", id).Preload("User").First(&categoryModel).Error
+	if err != nil {
+		code := "[REPOSITORY] GetCategoryByID - 1"
+		log.Errorw(code, err)
+		return nil, err
+	}
+
+	resp := entity.CategoryEntity{
+		ID: categoryModel.ID,
+		Name: categoryModel.Name,
+		Slug: categoryModel.Slug,
+		User: entity.UserEntity{
+			ID: categoryModel.User.ID,
+			Name: categoryModel.User.Name,
+			Email: categoryModel.User.Email,
+		},
+	}
+
+	return &resp, nil
 }
 
 // UpdateCategory implements [CategoryRepository].

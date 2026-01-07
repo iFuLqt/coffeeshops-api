@@ -7,6 +7,7 @@ import (
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler/response"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/service"
+	"github.com/ifulqt/coffeeshops-api/library/helper"
 	"github.com/ifulqt/coffeeshops-api/library/validat"
 )
 
@@ -106,7 +107,7 @@ func (f *categoryHandler) GetCategories(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
 	}
 
-	results, err := f.CategoryService.GetCategories(c.Context(),)
+	results, err := f.CategoryService.GetCategories(c.Context())
 	if err != nil {
 		code := "[HANDLER] GetCategories - 1"
 		log.Errorw(code, err)
@@ -119,9 +120,9 @@ func (f *categoryHandler) GetCategories(c *fiber.Ctx) error {
 	categoryResps := []response.CategoryResponse{}
 	for _, val := range results {
 		categoryResp := response.CategoryResponse{
-			ID: val.ID,
-			Category: val.Name,
-			Slug: val.Slug,
+			ID:            val.ID,
+			Category:      val.Name,
+			Slug:          val.Slug,
 			CreatedByName: val.User.Name,
 		}
 		categoryResps = append(categoryResps, categoryResp)
@@ -137,7 +138,52 @@ func (f *categoryHandler) GetCategories(c *fiber.Ctx) error {
 
 // GetCategoryByID implements [CategoryHandler].
 func (f *categoryHandler) GetCategoryByID(c *fiber.Ctx) error {
-	panic("unimplemented")
+	var resp response.DefaultSuccessResponse
+	var errResp response.DefaultErrorResponse
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	idParameter := c.Params("categoryID")
+	id, err := helper.StringToInt(idParameter)
+	if err != nil {
+		code := "[HANDLER] GetCategoryByID - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Category ID must be an integer"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	result, err := f.CategoryService.GetCategoryByID(c.Context(), int(id))
+	if err != nil {
+		code := "[HANDLER] GetCategoryByID - 2"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	categoryResp := response.CategoryResponse{
+		ID:            result.ID,
+		Category:      result.Name,
+		Slug:          result.Slug,
+		CreatedByName: result.User.Name,
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Category fetched successfully"
+	resp.Meta.Errors = nil
+	resp.Data = categoryResp
+
+	return c.JSON(resp)
 }
 
 // UpdateCategory implements [CategoryHandler].
