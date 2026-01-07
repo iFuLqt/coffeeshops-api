@@ -35,14 +35,17 @@ func RunServer() {
 	// REPOSITORY
 	authRepo := repository.NewAuthRepository(db.DB)
 	userRepo := repository.NewUserRepository(db.DB)
+	categoryRepo := repository.NewCategoryRepository(db.DB)
 
 	// SERVICE
 	authServ := service.NewAuthService(authRepo, cfg, jwt)
 	userServ := service.NewUserService(userRepo)
+	categoryServ := service.NewCategoryService(categoryRepo)
 
 	// HANDLER
 	authHandler := handler.NewAuthHandler(authServ)
 	userHandler := handler.NewUserHandler(userServ)
+	categoryHandler := handler.NewCategoryHandler(categoryServ)
 
 	app := fiber.New()
 	app.Use(cors.New())
@@ -57,6 +60,9 @@ func RunServer() {
 	admin := api.Group("/admin")
 	admin.Use(middlewareAuth.CheckToken())
 	admin.Post("/update-password", userHandler.UpdatePassword)
+
+	category := admin.Group("/categories")
+	category.Post("/", categoryHandler.CreateCategory)
 
 	go func() {
 		if cfg.App.AppPort == "" {

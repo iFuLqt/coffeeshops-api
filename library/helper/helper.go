@@ -1,6 +1,8 @@
 package helper
 
 import (
+	"strings"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,4 +20,10 @@ func CheckHashPassword(newPass string, oldPass string) error {
 		return err
 	}
 	return nil
+}
+
+func GenerateSlug(s string) string {
+	j := strings.ToLower(s)
+	slug := strings.ReplaceAll(j, " ", "-")
+	return slug
 }

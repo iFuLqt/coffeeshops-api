@@ -7,4 +7,5 @@ var (
 	ErrUserNotFound    = errors.New("user not found")
 	ErrGenerateToken = errors.New("generate token failed")
 	ErrSamePassword = errors.New("new password must be different")
+	ErrCategorySlugExists = errors.New("category slug already exists")
 )

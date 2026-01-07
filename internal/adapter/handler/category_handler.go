@@ -1,32 +1,33 @@
 package handler
 
 import (
-	"errors"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler/request"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler/response"
-	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/service"
 	"github.com/ifulqt/coffeeshops-api/library/validat"
 )
 
-type UserHandler interface {
-	UpdatePassword(c *fiber.Ctx) error
+type CategoryHandler interface {
+	GetCategories(c *fiber.Ctx) error
+	GetCategoryByID(c *fiber.Ctx) error
+	CreateCategory(c *fiber.Ctx) error
+	UpdateCategory(c *fiber.Ctx) error
+	DeleteCategory(c *fiber.Ctx) error
 }
 
-type userHandler struct {
-	UserService service.UserService
+type categoryHandler struct {
+	CategoryService service.CategoryService
 }
 
-// UpdatePassword implements [UserHandler].
-func (u *userHandler) UpdatePassword(c *fiber.Ctx) error {
+// CreateCategory implements [CategoryHandler].
+func (f *categoryHandler) CreateCategory(c *fiber.Ctx) error {
 	var err error
 	var errResp response.DefaultErrorResponse
 	var resp response.DefaultSuccessResponse
-	var req request.UpdatePasswordRequest
+	var req request.CategoryRequest
 
 	claims := c.Locals("user").(*entity.JwtData)
 	userID := claims.UserID
@@ -39,7 +40,7 @@ func (u *userHandler) UpdatePassword(c *fiber.Ctx) error {
 
 	err = c.BodyParser(&req)
 	if err != nil {
-		code := "[HANDLER] UpdatePassword - 1"
+		code := "[HANDLER] CreateCategory - 1"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
 		errResp.Meta.Message = "Invalid request body"
@@ -49,7 +50,7 @@ func (u *userHandler) UpdatePassword(c *fiber.Ctx) error {
 
 	err = validat.ValidateStruct(&req)
 	if err != nil {
-		code := "[HANDLER] UpdatePassword - 2"
+		code := "[HANDLER] CreateCategory - 2"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
 		errResp.Meta.Message = "Invalid request data"
@@ -62,34 +63,52 @@ func (u *userHandler) UpdatePassword(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
-	err = u.UserService.UpdatePassword(c.Context(), req.NewPassword, req.CurrentPassword, int(userID))
+	reqEntity := entity.CategoryEntity{
+		Name: req.Category,
+		User: entity.UserEntity{
+			ID: int(userID),
+		},
+	}
+
+	err = f.CategoryService.CreateCategory(c.Context(), reqEntity)
 	if err != nil {
-		code := "[HANDLER] UpdatePassword - 3"
+		code := "[HANDLER] CreateCategory - 3"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
-		if errors.Is(err, domerror.ErrInvalidPassword) || errors.Is(err, domerror.ErrUserNotFound) {
-			errResp.Meta.Message = "Current password is wrong"
-			errResp.Meta.Errors = nil
-			return c.Status(fiber.StatusBadRequest).JSON(errResp)
-		} else if errors.Is(err, domerror.ErrSamePassword) {
-			errResp.Meta.Message = "New password mush be different from current password"
-			errResp.Meta.Errors = nil
-			return c.Status(fiber.StatusBadRequest).JSON(errResp)
-		}
 		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
 		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
-
 	}
 
 	resp.Meta.Status = true
-	resp.Meta.Message = "Update password successfully"
+	resp.Meta.Message = "Create category successfully"
 	resp.Meta.Errors = nil
 
 	return c.JSON(resp)
 }
 
-func NewUserHandler(userServ service.UserService) UserHandler {
-	return &userHandler{
-		UserService: userServ,
+// DeleteCategory implements [CategoryHandler].
+func (f *categoryHandler) DeleteCategory(c *fiber.Ctx) error {
+	panic("unimplemented")
+}
+
+// GetCategories implements [CategoryHandler].
+func (f *categoryHandler) GetCategories(c *fiber.Ctx) error {
+	panic("unimplemented")
+}
+
+// GetCategoryByID implements [CategoryHandler].
+func (f *categoryHandler) GetCategoryByID(c *fiber.Ctx) error {
+	panic("unimplemented")
+}
+
+// UpdateCategory implements [CategoryHandler].
+func (f *categoryHandler) UpdateCategory(c *fiber.Ctx) error {
+	panic("unimplemented")
+}
+
+func NewCategoryHandler(categoryServ service.CategoryService) CategoryHandler {
+	return &categoryHandler{
+		CategoryService: categoryServ,
 	}
 }
