@@ -42,7 +42,14 @@ func (c *categoryService) DeleteCategory(ctx context.Context, id int) error {
 
 // GetCategories implements [CategoryService].
 func (c *categoryService) GetCategories(ctx context.Context) ([]entity.CategoryEntity, error) {
-	panic("unimplemented")
+	results, err := c.CategoryRepository.GetCategories(ctx)
+	if err != nil {
+		code := "[SERVICE] GetCategories - 1"
+		log.Errorw(code, err)
+		return nil, err
+	}
+
+	return results, err
 }
 
 // GetCategoryByID implements [CategoryService].

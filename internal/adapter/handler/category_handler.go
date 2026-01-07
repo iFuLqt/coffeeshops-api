@@ -94,7 +94,45 @@ func (f *categoryHandler) DeleteCategory(c *fiber.Ctx) error {
 
 // GetCategories implements [CategoryHandler].
 func (f *categoryHandler) GetCategories(c *fiber.Ctx) error {
-	panic("unimplemented")
+	var resp response.DefaultSuccessResponse
+	var errResp response.DefaultErrorResponse
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	results, err := f.CategoryService.GetCategories(c.Context(),)
+	if err != nil {
+		code := "[HANDLER] GetCategories - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Data not found"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	categoryResps := []response.CategoryResponse{}
+	for _, val := range results {
+		categoryResp := response.CategoryResponse{
+			ID: val.ID,
+			Category: val.Name,
+			Slug: val.Slug,
+			CreatedByName: val.User.Name,
+		}
+		categoryResps = append(categoryResps, categoryResp)
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Categories fetched successfully"
+	resp.Meta.Errors = nil
+	resp.Data = categoryResps
+
+	return c.JSON(resp)
 }
 
 // GetCategoryByID implements [CategoryHandler].
