@@ -3,6 +3,7 @@ package helper
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -35,4 +36,8 @@ func StringToInt(s string) (int64, error) {
 		return 0, err
 	}
 	return newInt, nil
+}
+
+func ParseHourMinute(s string) (time.Time, error) {
+	return time.Parse("15:04", s)
 }

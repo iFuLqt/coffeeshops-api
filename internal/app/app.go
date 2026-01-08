@@ -36,16 +36,19 @@ func RunServer() {
 	authRepo := repository.NewAuthRepository(db.DB)
 	userRepo := repository.NewUserRepository(db.DB)
 	categoryRepo := repository.NewCategoryRepository(db.DB)
+	coffeeShopRepo := repository.NewCoffeeShopRepository(db.DB)
 
 	// SERVICE
 	authServ := service.NewAuthService(authRepo, cfg, jwt)
 	userServ := service.NewUserService(userRepo)
 	categoryServ := service.NewCategoryService(categoryRepo)
+	coffeeShopServ := service.NewCoffeeShopService(coffeeShopRepo)
 
 	// HANDLER
 	authHandler := handler.NewAuthHandler(authServ)
 	userHandler := handler.NewUserHandler(userServ)
 	categoryHandler := handler.NewCategoryHandler(categoryServ)
+	coffeeShopHandler := handler.NewCoffeeShopHandler(coffeeShopServ)
 
 	app := fiber.New()
 	app.Use(cors.New())
@@ -67,6 +70,9 @@ func RunServer() {
 	category.Get("/:categoryID", categoryHandler.GetCategoryByID)
 	category.Delete("/:categoryID", categoryHandler.DeleteCategory)
 	category.Put("/:categoryID", categoryHandler.UpdateCategory)
+
+	coffeShop := admin.Group("/coffeeshops")
+	coffeShop.Post("/", coffeeShopHandler.CreateCoffeeShop)
 
 	go func() {
 		if cfg.App.AppPort == "" {

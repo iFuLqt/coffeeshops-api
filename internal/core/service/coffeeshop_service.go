@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/repository"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 )
@@ -21,7 +22,13 @@ type coffeeShopService struct {
 
 // CreateCoffeeShop implements [CoffeeShopService].
 func (c *coffeeShopService) CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) error {
-	panic("unimplemented")
+	err := c.CoffeeShopRepository.CreateCoffeeShop(ctx, req)
+	if err != nil {
+		code := "[HANDLER] CreateCoffeeShop - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 // DeleteCoffeeShop implements [CoffeeShopService].

@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/model"
+	"github.com/ifulqt/coffeeshops-api/library/helper"
 	"gorm.io/gorm"
 )
 
@@ -23,13 +25,25 @@ type coffeeShopRepository struct {
 
 // CreateCoffeeShop implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) error {
+	parsOpen, err := helper.ParseHourMinute(req.OpenTime)
+	if err != nil {
+		code := "[HANDLER] CreateCoffeeShop - 1"
+		log.Errorw(code, err)
+		return domerror.ErrParsingTime
+	}
+	parsClose, err := helper.ParseHourMinute(req.CloseTime)
+	if err != nil {
+		code := "[HANDLER] CreateCoffeeShop - 1"
+		log.Errorw(code, err)
+		return domerror.ErrParsingTime
+	}
 	modelCoffe := model.CoffeeShop{
 		Name:        req.Name,
 		Address:     req.Address,
 		Latitude:    req.Latitude,
 		Longitude:   req.Longitude,
-		OpenTime:    req.OpenTime,
-		CloseTime:   req.CloseTime,
+		OpenTime:    parsOpen,
+		CloseTime:   parsClose,
 		Parking:     req.Parking,
 		PrayerRoom:  req.PrayerRoom,
 		Wifi:        req.Wifi,
@@ -38,9 +52,10 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 		CreatedByID: req.UserCreate.ID,
 		UpdatedByID: req.UserUpdate.ID,
 		CategoryID:  req.Category.ID,
+		IsActive: req.IsActive,
 	}
 
-	err := c.db.Create(&modelCoffe).Error
+	err = c.db.Create(&modelCoffe).Error
 	if err != nil {
 		code := "[REPOSITORY] CreateCoffeeShop - 1"
 		log.Errorw(code, err)
