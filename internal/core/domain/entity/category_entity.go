@@ -4,5 +4,5 @@ type CategoryEntity struct {
 	ID int
 	Name string
 	Slug string
-	User UserEntity
+	CreatedBy UserEntity
 }

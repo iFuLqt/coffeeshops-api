@@ -66,7 +66,7 @@ func (f *categoryHandler) CreateCategory(c *fiber.Ctx) error {
 
 	reqEntity := entity.CategoryEntity{
 		Name: req.Category,
-		User: entity.UserEntity{
+		CreatedBy: entity.UserEntity{
 			ID: int(userID),
 		},
 	}
@@ -160,7 +160,10 @@ func (f *categoryHandler) GetCategories(c *fiber.Ctx) error {
 			ID:            val.ID,
 			Category:      val.Name,
 			Slug:          val.Slug,
-			CreatedByName: val.User.Name,
+			CreatedBy: response.UserResponse{
+				ID: val.CreatedBy.ID,
+				Name: val.CreatedBy.Name,
+			},
 		}
 		categoryResps = append(categoryResps, categoryResp)
 	}
@@ -212,7 +215,10 @@ func (f *categoryHandler) GetCategoryByID(c *fiber.Ctx) error {
 		ID:            result.ID,
 		Category:      result.Name,
 		Slug:          result.Slug,
-		CreatedByName: result.User.Name,
+		CreatedBy: response.UserResponse{
+			ID: result.CreatedBy.ID,
+			Name: result.CreatedBy.Name,
+		},
 	}
 
 	resp.Meta.Status = true

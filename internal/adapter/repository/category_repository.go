@@ -26,7 +26,7 @@ func (c *categoryRepository) CreateCategory(ctx context.Context, req entity.Cate
 	modelCategory := model.Category{
 		Name:        req.Name,
 		Slug:        req.Slug,
-		CreatedByID: req.User.ID,
+		CreatedByID: req.CreatedBy.ID,
 	}
 	err := c.db.Create(&modelCategory).Error
 	if err != nil {
@@ -65,7 +65,7 @@ func (c *categoryRepository) GetCategories(ctx context.Context) ([]entity.Catego
 			ID:   val.ID,
 			Name: val.Name,
 			Slug: val.Slug,
-			User: entity.UserEntity{
+			CreatedBy: entity.UserEntity{
 				ID:   val.User.ID,
 				Name: val.User.Name,
 			},
@@ -90,10 +90,9 @@ func (c *categoryRepository) GetCategoryByID(ctx context.Context, id int) (*enti
 		ID:   categoryModel.ID,
 		Name: categoryModel.Name,
 		Slug: categoryModel.Slug,
-		User: entity.UserEntity{
-			ID:    categoryModel.User.ID,
-			Name:  categoryModel.User.Name,
-			Email: categoryModel.User.Email,
+		CreatedBy: entity.UserEntity{
+			ID:   categoryModel.User.ID,
+			Name: categoryModel.User.Name,
 		},
 	}
 
@@ -105,7 +104,7 @@ func (c *categoryRepository) UpdateCategory(ctx context.Context, req entity.Cate
 	modelCategory := model.Category{
 		Name:        req.Name,
 		Slug:        req.Slug,
-		CreatedByID: req.User.ID,
+		CreatedByID: req.CreatedBy.ID,
 	}
 	err := c.db.Where("id = ?", req.ID).Updates(modelCategory).Error
 	if err != nil {
