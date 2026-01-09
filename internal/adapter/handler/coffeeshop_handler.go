@@ -2,8 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -22,100 +20,10 @@ type CoffeeShopHandler interface {
 	GetCoffeeShopByID(c *fiber.Ctx) error
 	UpdateCoffeeShop(c *fiber.Ctx) error
 	DeleteCoffeeShop(c *fiber.Ctx) error
-	UploadImages(c *fiber.Ctx) error
 }
 
 type coffeeShopHandler struct {
 	CoffeeShopService service.CoffeeShopService
-}
-
-// UploadImage implements [CoffeeShopHandler].
-func (f *coffeeShopHandler) UploadImages(c *fiber.Ctx) error {
-	var errResp response.DefaultErrorResponse
-	var resp response.DefaultSuccessResponse
-
-	claims := c.Locals("user").(*entity.JwtData)
-	userID := claims.UserID
-	if userID == 0 {
-		errResp.Meta.Status = false
-		errResp.Meta.Message = "Unauthorized access"
-		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
-	}
-
-	param := c.Params("coffeeshopID")
-	coffeeShopID, err := helper.StringToInt(param)
-	if err != nil || coffeeShopID <= 0 {
-		code := "[HANDLER] UploadImage - 1"
-		log.Errorw(code, err)
-		errResp.Meta.Status = false
-		errResp.Meta.Message = "Invalid coffee shop id"
-		errResp.Meta.Errors = nil
-		return c.Status(fiber.StatusBadRequest).JSON(errResp)
-	}
-
-	form, err := c.MultipartForm()
-	if err != nil {
-		code := "[HANDLER] UploadImage - 2"
-		log.Errorw(code, err)
-		errResp.Meta.Status = false
-		errResp.Meta.Message = "Invalid multipart form"
-		errResp.Meta.Errors = nil
-		return c.Status(fiber.StatusBadRequest).JSON(errResp)
-	}
-
-	files := form.File["images"]
-	if len(files) == 0 {
-		errResp.Meta.Status = false
-		errResp.Meta.Message = "Images are required"
-		errResp.Meta.Errors = nil
-		return c.Status(fiber.StatusBadRequest).JSON(errResp)
-	}
-
-	var imageURLs []string
-
-	for i, file := range files {
-		uploadReq := entity.FileUploadImageEntity{
-			File: file,
-			Name: fmt.Sprintf("%d-%d", int(userID), time.Now().Unix()),
-		}
-
-		imageURL, err := f.CoffeeShopService.UploadImagesR2(c.Context(), uploadReq)
-		if err != nil {
-			code := "[HANDLER]"
-			log.Errorw(code, err)
-			errResp.Meta.Status = false
-			errResp.Meta.Message = "Failed to upload image"
-			errResp.Meta.Errors = nil
-			return c.Status(fiber.StatusInternalServerError).JSON(errResp)
-		}
-
-		reqEntity := entity.ImageEntity{
-			CoffeeShopID: int(coffeeShopID),
-			Image:        imageURL,
-			IsPrimary:    i == 0,
-		}
-
-		err = f.CoffeeShopService.UploadImages(c.Context(), reqEntity)
-		if err != nil {
-			code := "[HANDLER] UploadImage - 1"
-			log.Errorw(code, err)
-			errResp.Meta.Status = false
-			errResp.Meta.Message = "Failed to save image"
-			errResp.Meta.Errors = nil
-			return c.Status(fiber.StatusInternalServerError).JSON(errResp)
-		}
-
-		imageURLs = append(imageURLs, imageURL)
-	}
-
-	resp.Meta.Status = true
-	resp.Meta.Message = "Upload images successfully"
-	resp.Meta.Errors = nil
-	resp.Data = fiber.Map{
-		"images": imageURLs,
-	}
-
-	return c.JSON(resp)
 }
 
 // CreateCoffeeShop implements [CoffeeShopHandler].
@@ -159,13 +67,13 @@ func (f *coffeeShopHandler) CreateCoffeeShop(c *fiber.Ctx) error {
 	}
 
 	reqEntity := entity.CoffeeShopEntity{
-		Name:       req.CoffeeShop,
-		Address:    req.Address,
-		Latitude:   req.Latitude,
-		Longitude:  req.Longitude,
-		OpenTime:   req.OpenTime,
-		CloseTime:  req.CloseTime,
-		Instagram:  req.Instagram,
+		Name:      req.CoffeeShop,
+		Address:   req.Address,
+		Latitude:  req.Latitude,
+		Longitude: req.Longitude,
+		OpenTime:  req.OpenTime,
+		CloseTime: req.CloseTime,
+		Instagram: req.Instagram,
 		UserCreate: entity.UserEntity{
 			ID: int(userID),
 		},
@@ -254,7 +162,7 @@ func (f *coffeeShopHandler) GetCoffeeShopByID(c *fiber.Ctx) error {
 		Name:      result.Name,
 		Address:   result.Address,
 		OpenClose: helper.GenerateOpenTime(result.OpenTime, result.CloseTime),
-		Facility: &response.FacilityCoffeeShopResponse{},
+		Facility:  &response.FacilityCoffeeShopResponse{},
 		Maps:      helper.LinkGoogleMaps(result.Latitude, result.Longitude),
 		Instagram: helper.LinkInstagram(result.Instagram),
 		CreatedBy: &response.UserResponse{

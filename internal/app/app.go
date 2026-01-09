@@ -43,18 +43,21 @@ func RunServer() {
 	userRepo := repository.NewUserRepository(db.DB)
 	categoryRepo := repository.NewCategoryRepository(db.DB)
 	coffeeShopRepo := repository.NewCoffeeShopRepository(db.DB)
+	uploadImageRepo := repository.NewUploadImageRepository(db.DB)
 
 	// SERVICE
 	authServ := service.NewAuthService(authRepo, cfg, jwt)
 	userServ := service.NewUserService(userRepo)
 	categoryServ := service.NewCategoryService(categoryRepo)
-	coffeeShopServ := service.NewCoffeeShopService(coffeeShopRepo, r2Adapter)
+	coffeeShopServ := service.NewCoffeeShopService(coffeeShopRepo)
+	uploadImageServ := service.NewUploadImageService(uploadImageRepo, r2Adapter)
 
 	// HANDLER
 	authHandler := handler.NewAuthHandler(authServ)
 	userHandler := handler.NewUserHandler(userServ)
 	categoryHandler := handler.NewCategoryHandler(categoryServ)
 	coffeeShopHandler := handler.NewCoffeeShopHandler(coffeeShopServ)
+	uploadImageHandler := handler.NewUploadImageHandler(uploadImageServ)
 
 	app := fiber.New()
 	app.Use(cors.New())
@@ -81,7 +84,7 @@ func RunServer() {
 	coffeShop.Post("/", coffeeShopHandler.CreateCoffeeShop)
 	coffeShop.Get("/", coffeeShopHandler.GetCoffeeShops)
 	coffeShop.Get("/:coffeeshopID", coffeeShopHandler.GetCoffeeShopByID)
-	coffeShop.Post("/:coffeeshopID/upload-image", coffeeShopHandler.UploadImages)
+	coffeShop.Post("/upload-image/:coffeeshopID", uploadImageHandler.UploadImages)
 
 	go func() {
 		if cfg.App.AppPort == "" {

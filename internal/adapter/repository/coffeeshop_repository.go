@@ -15,27 +15,10 @@ type CoffeeShopRepository interface {
 	GetCoffeeShopByID(ctx context.Context, id int) (*entity.CoffeeShopEntity, error)
 	UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) error
 	DeleteCoffeeShop(ctx context.Context, id int) error
-	UploadImages(ctx context.Context, req entity.ImageEntity) error
 }
 
 type coffeeShopRepository struct {
 	db *gorm.DB
-}
-
-// UploadImages implements [CoffeeShopRepository].
-func (c *coffeeShopRepository) UploadImages(ctx context.Context, req entity.ImageEntity) error {
-	modelCoffe := model.CoffeeShopImage{
-		CoffeeShopID: req.CoffeeShopID,
-		Image:        req.Image,
-		IsPrimary:    req.IsPrimary,
-	}
-	err := c.db.Create(&modelCoffe).Error
-	if err != nil {
-		code := "[REPOSITORY] UploadImages - 1"
-		log.Errorw(code, err)
-		return err
-	}
-	return nil
 }
 
 // CreateCoffeeShop implements [CoffeeShopRepository].
