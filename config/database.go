@@ -33,6 +33,7 @@ func (cfg Config) ConnectionPostgres() (*Postgres, error) {
 	}
 
 	seeds.UserSeeder(db)
+	seeds.FacilitySeed(db)
 
 	sqlDB.SetMaxIdleConns(cfg.Psql.DBMaxIdle)
 	sqlDB.SetMaxOpenConns(cfg.Psql.DBMaxOpen)

@@ -165,10 +165,6 @@ func (f *coffeeShopHandler) CreateCoffeeShop(c *fiber.Ctx) error {
 		Longitude:  req.Longitude,
 		OpenTime:   req.OpenTime,
 		CloseTime:  req.CloseTime,
-		Parking:    req.Parking,
-		PrayerRoom: req.PrayerRoom,
-		Wifi:       req.Wifi,
-		Gofood:     req.Gofood,
 		Instagram:  req.Instagram,
 		UserCreate: entity.UserEntity{
 			ID: int(userID),
@@ -258,12 +254,7 @@ func (f *coffeeShopHandler) GetCoffeeShopByID(c *fiber.Ctx) error {
 		Name:      result.Name,
 		Address:   result.Address,
 		OpenClose: helper.GenerateOpenTime(result.OpenTime, result.CloseTime),
-		Facility: &response.FacilityCoffeeShopResponse{
-			Parking:    result.Parking,
-			PrayerRoom: result.PrayerRoom,
-			Wifi:       result.Wifi,
-			Gofood:     result.Gofood,
-		},
+		Facility: &response.FacilityCoffeeShopResponse{},
 		Maps:      helper.LinkGoogleMaps(result.Latitude, result.Longitude),
 		Instagram: helper.LinkInstagram(result.Instagram),
 		CreatedBy: &response.UserResponse{

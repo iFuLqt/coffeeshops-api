@@ -10,15 +10,12 @@ type CoffeeShopEntity struct {
 	Longitude  float64
 	OpenTime   string
 	CloseTime   string
-	Parking    bool
-	PrayerRoom bool
-	Wifi       bool
-	Gofood     bool
 	Instagram  string
 	UserCreate UserEntity
 	UserUpdate UserEntity
 	Category   CategoryEntity
 	Image      []ImageEntity
+	Facility []FacilityEntity
 	IsActive   bool
 	UpdatedAt time.Time
 }
