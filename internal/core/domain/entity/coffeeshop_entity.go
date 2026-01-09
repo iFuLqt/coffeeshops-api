@@ -3,14 +3,13 @@ package entity
 import "time"
 
 type CoffeeShopEntity struct {
+	ID int
 	Name       string
 	Address    string
 	Latitude   float64
 	Longitude  float64
 	OpenTime   string
 	CloseTime   string
-	OpenTimeParse   time.Time
-	CloseTimeParse  time.Time
 	Parking    bool
 	PrayerRoom bool
 	Wifi       bool
@@ -21,4 +20,5 @@ type CoffeeShopEntity struct {
 	Category   CategoryEntity
 	Image      []ImageEntity
 	IsActive   bool
+	UpdatedAt time.Time
 }

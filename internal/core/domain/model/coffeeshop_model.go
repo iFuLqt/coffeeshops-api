@@ -8,8 +8,8 @@ type CoffeeShop struct {
 	Address    string `gorm:"address"`
 	Latitude   float64 `gorm:"latitude"`
 	Longitude float64 `gorm:"longtitude"`
-	OpenTime   time.Time `gorm:"open_time"`
-	CloseTime time.Time `gorm:"close_time"`
+	OpenTime   string `gorm:"open_time"`
+	CloseTime string `gorm:"close_time"`
 	Parking bool `gorm:"parking"`
 	PrayerRoom bool `gorm:"prayer_room"`
 	Wifi bool `gorm:"wifi"`

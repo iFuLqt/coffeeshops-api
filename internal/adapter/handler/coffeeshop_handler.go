@@ -215,12 +215,127 @@ func (f *coffeeShopHandler) DeleteCoffeeShop(c *fiber.Ctx) error {
 
 // GetCoffeeShopByID implements [CoffeeShopHandler].
 func (f *coffeeShopHandler) GetCoffeeShopByID(c *fiber.Ctx) error {
-	panic("unimplemented")
+	var resp response.DefaultSuccessResponse
+	var errResp response.DefaultErrorResponse
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	idParam := c.Params("coffeeshopID")
+	id, err := helper.StringToInt(idParam)
+	if err != nil {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Coffee shop ID salah"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	result, err := f.CoffeeShopService.GetCoffeeShopByID(c.Context(), int(id))
+	if err != nil {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Coffee shop ID salah"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	images := []response.ImagesCoffeeShopResponse{}
+	for _, res := range result.Image {
+		imag := response.ImagesCoffeeShopResponse{
+			Image:     res.Image,
+			IsPrimary: res.IsPrimary,
+		}
+		images = append(images, imag)
+	}
+
+	respData := response.CoffeeShopByIDResponse{
+		ID:        result.ID,
+		Name:      result.Name,
+		Address:   result.Address,
+		OpenClose: helper.GenerateOpenTime(result.OpenTime, result.CloseTime),
+		Facility: &response.FacilityCoffeeShopResponse{
+			Parking:    result.Parking,
+			PrayerRoom: result.PrayerRoom,
+			Wifi:       result.Wifi,
+			Gofood:     result.Gofood,
+		},
+		Maps:      helper.LinkGoogleMaps(result.Latitude, result.Longitude),
+		Instagram: helper.LinkInstagram(result.Instagram),
+		CreatedBy: &response.UserResponse{
+			Name: result.UserCreate.Name,
+		},
+		UpdatedBy: &response.UserResponse{
+			Name: result.UserUpdate.Name,
+		},
+		Images:    images,
+		UpdatedAt: result.UpdatedAt,
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Success fetch coffee shop by id"
+	resp.Meta.Errors = nil
+	resp.Data = respData
+
+	return c.JSON(resp)
 }
 
 // GetCoffeeShops implements [CoffeeShopHandler].
 func (f *coffeeShopHandler) GetCoffeeShops(c *fiber.Ctx) error {
-	panic("unimplemented")
+	var resp response.DefaultSuccessResponse
+	var errResp response.DefaultErrorResponse
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized Access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	results, err := f.CoffeeShopService.GetCoffeeShops(c.Context())
+	if err != nil {
+		code := "[HANDLER] GetCoffeeShops - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	respDatas := []response.CoffeeShopsResponse{}
+	for _, res := range results {
+		images := []response.ImagesCoffeeShopResponse{}
+		for _, image := range res.Image {
+			imag := response.ImagesCoffeeShopResponse{
+				Image:     image.Image,
+				IsPrimary: image.IsPrimary,
+			}
+			images = append(images, imag)
+		}
+
+		respData := response.CoffeeShopsResponse{
+			ID:        res.ID,
+			Name:      res.Name,
+			Address:   res.Address,
+			OpenClose: helper.GenerateOpenTime(res.OpenTime, res.CloseTime),
+			Category:  res.Category.Name,
+			Images:    images,
+		}
+		respDatas = append(respDatas, respData)
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Success fetch coffee shops"
+	resp.Meta.Errors = nil
+	resp.Data = respDatas
+
+	return c.JSON(resp)
 }
 
 // UpdateCoffeeShop implements [CoffeeShopHandler].

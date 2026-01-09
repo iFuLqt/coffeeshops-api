@@ -45,8 +45,8 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 		Address:     req.Address,
 		Latitude:    req.Latitude,
 		Longitude:   req.Longitude,
-		OpenTime:    req.OpenTimeParse,
-		CloseTime:   req.CloseTimeParse,
+		OpenTime:    req.OpenTime,
+		CloseTime:   req.CloseTime,
 		Parking:     req.Parking,
 		PrayerRoom:  req.PrayerRoom,
 		Wifi:        req.Wifi,
@@ -56,6 +56,7 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 		UpdatedByID: req.UserUpdate.ID,
 		CategoryID:  req.Category.ID,
 		IsActive:    req.IsActive,
+		UpdatedAt:   req.UpdatedAt,
 	}
 
 	err := c.db.Create(&modelCoffe).Error
@@ -74,12 +75,93 @@ func (c *coffeeShopRepository) DeleteCoffeeShop(ctx context.Context, id int) err
 
 // GetCoffeeShopByID implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int) (*entity.CoffeeShopEntity, error) {
-	panic("unimplemented")
+	var modelCoffe model.CoffeeShop
+	err := c.db.Where("id = ?", id).Preload("Category").Preload("UserUpdate").Preload("UserCreate").
+		Preload("Images").First(&modelCoffe).Error
+	if err != nil {
+		code := "[REPOSITORY] GetCoffeeShopByID - 1"
+		log.Errorw(code, err)
+		return nil, err
+	}
+
+	imageSlics := []entity.ImageEntity{}
+	for _, valImage := range modelCoffe.Images {
+		imageEnt := entity.ImageEntity{
+			Image:     valImage.Image,
+			IsPrimary: valImage.IsPrimary,
+		}
+		imageSlics = append(imageSlics, imageEnt)
+	}
+
+	coffeeEnt := entity.CoffeeShopEntity{
+		ID:         modelCoffe.ID,
+		Name:       modelCoffe.Name,
+		Address:    modelCoffe.Address,
+		Latitude:   modelCoffe.Latitude,
+		Longitude:  modelCoffe.Longitude,
+		OpenTime:   modelCoffe.OpenTime,
+		CloseTime:  modelCoffe.CloseTime,
+		Parking:    modelCoffe.Parking,
+		PrayerRoom: modelCoffe.PrayerRoom,
+		Wifi:       modelCoffe.Wifi,
+		Gofood:     modelCoffe.Gofood,
+		Instagram:  modelCoffe.Instagram,
+		UserCreate: entity.UserEntity{
+			ID:   modelCoffe.UserCreate.ID,
+			Name: modelCoffe.UserCreate.Name,
+		},
+		UserUpdate: entity.UserEntity{
+			ID:   modelCoffe.UserUpdate.ID,
+			Name: modelCoffe.UserUpdate.Name,
+		},
+		Category: entity.CategoryEntity{
+			ID:   modelCoffe.Category.ID,
+			Name: modelCoffe.Category.Name,
+		},
+		Image: imageSlics,
+	}
+	return &coffeeEnt, nil
 }
 
 // GetCoffeeShops implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error) {
-	panic("unimplemented")
+	var modelCoffe []model.CoffeeShop
+	err := c.db.Preload("Category").Preload("Images").Find(&modelCoffe).Error
+	if err != nil {
+		code := "[REPOSITORY] GetCoffeeShops - 1"
+		log.Errorw(code, err)
+		return nil, err
+	}
+	coffeeEntity := []entity.CoffeeShopEntity{}
+	for _, val := range modelCoffe {
+		imageSlics := []entity.ImageEntity{}
+		for _, valImage := range val.Images {
+			if !valImage.IsPrimary {
+				continue
+			}
+			imageEnt := entity.ImageEntity{
+				Image:     valImage.Image,
+				IsPrimary: true,
+			}
+			imageSlics = append(imageSlics, imageEnt)
+		}
+
+		coffeeEnt := entity.CoffeeShopEntity{
+			ID:        val.ID,
+			Name:      val.Name,
+			Address:   val.Address,
+			OpenTime:  val.OpenTime,
+			CloseTime: val.CloseTime,
+			Instagram: val.Instagram,
+			Category: entity.CategoryEntity{
+				ID:   val.Category.ID,
+				Name: val.Category.Name,
+			},
+			Image: imageSlics,
+		}
+		coffeeEntity = append(coffeeEntity, coffeeEnt)
+	}
+	return coffeeEntity, nil
 }
 
 // UpdateCoffeeShop implements [CoffeeShopRepository].

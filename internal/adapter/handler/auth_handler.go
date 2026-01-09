@@ -74,7 +74,7 @@ func (a *authHandler) Login(c *fiber.Ctx) error {
 	}
 
 	resp.Meta.Status = true
-	resp.Meta.Message = "Login Successfully"
+	resp.Meta.Message = "Login successfully"
 	resp.AccessToken = result.Token
 	resp.ExpiredAt = result.ExpiredAt
 

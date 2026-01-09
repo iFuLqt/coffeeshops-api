@@ -1,9 +1,9 @@
 package helper
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -38,6 +38,24 @@ func StringToInt(s string) (int64, error) {
 	return newInt, nil
 }
 
-func ParseHourMinute(s string) (time.Time, error) {
-	return time.Parse("15:04", s)
+func LinkInstagram(s string) string {
+	return fmt.Sprintf("https://instagram.com/%s", s)
+}
+
+func LinkGoogleMaps(lat, long float64) string {
+	return fmt.Sprintf("https://www.google.com/maps?q=%.6f,%.6f", lat, long)
+}
+
+func GenerateOpenTime(o, c string) string {
+	open := CutTime(o)
+	close := CutTime(c)
+	return fmt.Sprintf("%s - %s", open, close)
+}
+
+func CutTime(s string) string {
+	parts := strings.Split(s, ":")
+	if len(parts) < 2 {
+		return s
+	}
+	return parts[0] + ":" + parts[1]
 }

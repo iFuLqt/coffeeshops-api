@@ -6,9 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/cloudflare"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/repository"
-	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
-	"github.com/ifulqt/coffeeshops-api/library/helper"
 )
 
 type CoffeeShopService interface {
@@ -23,7 +21,7 @@ type CoffeeShopService interface {
 
 type coffeeShopService struct {
 	CoffeeShopRepository repository.CoffeeShopRepository
-	R2 cloudflare.CloudFlareR2Adapter
+	R2                   cloudflare.CloudFlareR2Adapter
 }
 
 // UploadImagesR2 implements [CoffeeShopService].
@@ -50,20 +48,6 @@ func (c *coffeeShopService) UploadImages(ctx context.Context, req entity.ImageEn
 
 // CreateCoffeeShop implements [CoffeeShopService].
 func (c *coffeeShopService) CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int, error) {
-	parsOpen, err := helper.ParseHourMinute(req.OpenTime)
-	if err != nil {
-		code := "[SERVICE] CreateCoffeeShop - 1"
-		log.Errorw(code, err)
-		return 0, domerror.ErrParsingTime
-	}
-	parsClose, err := helper.ParseHourMinute(req.CloseTime)
-	if err != nil {
-		code := "[SERVICE] CreateCoffeeShop - 2"
-		log.Errorw(code, err)
-		return 0, domerror.ErrParsingTime
-	}
-	req.OpenTimeParse = parsOpen
-	req.CloseTimeParse = parsClose
 	id, err := c.CoffeeShopRepository.CreateCoffeeShop(ctx, req)
 	if err != nil {
 		code := "[SERVICE] CreateCoffeeShop - 3"
@@ -80,12 +64,24 @@ func (c *coffeeShopService) DeleteCoffeeShop(ctx context.Context, id int) error 
 
 // GetCoffeeShopByID implements [CoffeeShopService].
 func (c *coffeeShopService) GetCoffeeShopByID(ctx context.Context, id int) (*entity.CoffeeShopEntity, error) {
-	panic("unimplemented")
+	result, err := c.CoffeeShopRepository.GetCoffeeShopByID(ctx, id)
+	if err != nil {
+		code := "[SERVICE] GetCoffeeShops - 1"
+		log.Errorw(code, err)
+		return nil, err
+	}
+	return result, nil
 }
 
 // GetCoffeeShops implements [CoffeeShopService].
 func (c *coffeeShopService) GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error) {
-	panic("unimplemented")
+	results, err := c.CoffeeShopRepository.GetCoffeeShops(ctx)
+	if err != nil {
+		code := "[SERVICE] GetCoffeeShops - 1"
+		log.Errorw(code, err)
+		return nil, err
+	}
+	return results, nil
 }
 
 // UpdateCoffeeShop implements [CoffeeShopService].
@@ -96,6 +92,6 @@ func (c *coffeeShopService) UpdateCoffeeShop(ctx context.Context, req entity.Cof
 func NewCoffeeShopService(coffeeShopRepo repository.CoffeeShopRepository, R2 cloudflare.CloudFlareR2Adapter) CoffeeShopService {
 	return &coffeeShopService{
 		CoffeeShopRepository: coffeeShopRepo,
-		R2: R2,
+		R2:                   R2,
 	}
 }

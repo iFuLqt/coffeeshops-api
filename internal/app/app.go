@@ -79,6 +79,8 @@ func RunServer() {
 
 	coffeShop := admin.Group("/coffeeshops")
 	coffeShop.Post("/", coffeeShopHandler.CreateCoffeeShop)
+	coffeShop.Get("/", coffeeShopHandler.GetCoffeeShops)
+	coffeShop.Get("/:coffeeshopID", coffeeShopHandler.GetCoffeeShopByID)
 	coffeShop.Post("/:coffeeshopID/upload-image", coffeeShopHandler.UploadImages)
 
 	go func() {
