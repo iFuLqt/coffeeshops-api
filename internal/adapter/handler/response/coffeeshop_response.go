@@ -37,7 +37,4 @@ type FacilityCoffeeShopResponse struct {
 	Gofood     bool `json:"gofood,omitempty"`
 }
 
-type ImagesCoffeeShopResponse struct {
-	Image     string `json:"image,omitempty"`
-	IsPrimary bool   `json:"is_primary,omitempty"`
-}
+
