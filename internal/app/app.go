@@ -8,11 +8,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/ifulqt/coffeeshops-api/config"
+	"github.com/ifulqt/coffeeshops-api/internal/adapter/cloudflare"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/repository"
 	"github.com/ifulqt/coffeeshops-api/internal/core/service"
@@ -29,6 +31,10 @@ func RunServer() {
 	}
 
 	// SETTINGS
+	cdfR2 := cfg.LoadAwsConfig()
+	s3Client := s3.NewFromConfig(cdfR2)
+	r2Adapter := cloudflare.NewCloudFlareR2Adapter(s3Client, cfg)
+
 	jwt := auth.NewJwt(cfg)
 	middlewareAuth := middleware.NewMiddleware(jwt)
 
@@ -42,7 +48,7 @@ func RunServer() {
 	authServ := service.NewAuthService(authRepo, cfg, jwt)
 	userServ := service.NewUserService(userRepo)
 	categoryServ := service.NewCategoryService(categoryRepo)
-	coffeeShopServ := service.NewCoffeeShopService(coffeeShopRepo)
+	coffeeShopServ := service.NewCoffeeShopService(coffeeShopRepo, r2Adapter)
 
 	// HANDLER
 	authHandler := handler.NewAuthHandler(authServ)
@@ -73,6 +79,7 @@ func RunServer() {
 
 	coffeShop := admin.Group("/coffeeshops")
 	coffeShop.Post("/", coffeeShopHandler.CreateCoffeeShop)
+	coffeShop.Post("/:coffeeshopID/upload-image", coffeeShopHandler.UploadImages)
 
 	go func() {
 		if cfg.App.AppPort == "" {
