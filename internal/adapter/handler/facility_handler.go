@@ -88,14 +88,14 @@ func (f *facilityHandler) GetFacilities(c *fiber.Ctx) error {
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
 		errResp.Meta.Message = "Internal server error"
-		errResp.Meta.Errors = nil 
+		errResp.Meta.Errors = nil
 		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
 	}
 
 	respDatas := []response.FacilityResponse{}
 	for _, res := range results {
 		respData := response.FacilityResponse{
-			ID: res.ID,
+			ID:   res.ID,
 			Name: res.Name,
 			Code: res.Code,
 		}
@@ -112,7 +112,75 @@ func (f *facilityHandler) GetFacilities(c *fiber.Ctx) error {
 
 // UpdateFacility implements [FacilityHandler].
 func (f *facilityHandler) UpdateFacility(c *fiber.Ctx) error {
-	panic("unimplemented")
+	var resp response.DefaultSuccessResponse
+	var errResp response.DefaultErrorResponse
+	var req request.FacilityRequest
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	idParameter := c.Params("facilityID")
+	idFacility, err := helper.StringToInt(idParameter)
+	if err != nil {
+		code := "[HANDLER] UpdateFacility - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Facility ID must be integer"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = c.BodyParser(&req)
+	if err != nil {
+		code := "[HANDLER] UpdateFacility - 2"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Invalid request body"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = validat.ValidateStruct(&req)
+	if err != nil {
+		code := "[HANDLER] UpdateFacility - 3"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Invalid request data"
+		val, ok := err.(validat.ValidationError)
+		if ok {
+			errResp.Meta.Errors = val.Message
+		} else {
+			errResp.Meta.Errors = nil
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	reqEntity := entity.FacilityEntity{
+		Name: req.Name,
+		Code: req.Code,
+	}
+
+	err = f.FacilityService.UpdateFacility(c.Context(), reqEntity, int(idFacility))
+	if err != nil {
+		code := "[HANDLER] UpdateFacility - 4"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Update facility successfully"
+	resp.Meta.Errors = nil
+
+	return c.JSON(resp)
 }
 
 // CreateFacility implements [FacilityHandler].

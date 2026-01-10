@@ -58,7 +58,17 @@ func (f *facilityRepository) GetFacilities(ctx context.Context) ([]entity.Facili
 
 // UpdateFacility implements [FacilityRepository].
 func (f *facilityRepository) UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int) error {
-	panic("unimplemented")
+	modelFacility := model.Facility{
+		Name: req.Name,
+		Code: req.Code,
+	}
+	err := f.db.Where("id = ?", id).Updates(&modelFacility).Error
+	if err != nil {
+		code := "[HANDLER] UpdateFacility - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 // CreateFacility implements [FacilityRepository].

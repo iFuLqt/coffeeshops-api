@@ -94,6 +94,7 @@ func RunServer() {
 	facility.Post("/", facilityHandler.CreateFacility)
 	facility.Get("/", facilityHandler.GetFacilities)
 	facility.Delete("/:facilityID", facilityHandler.DeleteFacility)
+	facility.Put("/:facilityID", facilityHandler.UpdateFacility)
 
 	go func() {
 		if cfg.App.AppPort == "" {
