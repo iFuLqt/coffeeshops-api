@@ -9,4 +9,5 @@ var (
 	ErrSamePassword = errors.New("new password must be different")
 	ErrCategorySlugExists = errors.New("category slug already exists")
 	ErrParsingTime = errors.New("parsing time invalid")
+	ErrDuplicate = errors.New("data duplicate")
 )

@@ -5,14 +5,27 @@ import (
 
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/repository"
+	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 )
 
 type FacilityService interface {
 	CreateFacilityCoffeeShop(ctx context.Context, req []string, id int) error
+	CreateFacility(ctx context.Context, req entity.FacilityEntity) error
 }
 
 type facilityService struct {
 	FacilityRepository repository.FacilityRepository
+}
+
+// CreateFacility implements [FacilityService].
+func (f *facilityService) CreateFacility(ctx context.Context, req entity.FacilityEntity) error {
+	err := f.FacilityRepository.CreateFacility(ctx, req)
+	if err != nil {
+		code := "[SERVICE] - CreateFacility"
+		log.Errorw(code, err)
+		return err
+	}
+	return err
 }
 
 // CreateFacilityCoffeeShop implements [FacilityService].

@@ -1,5 +1,10 @@
 package request 
 
 type FacilityCoffeeShopRequest struct {
-	Code []string `json:"facility_code" validate:"required,min=1,dive,required"`
+	FacilityCode []string `json:"facility_code" validate:"required,min=1,dive,required"`
+}
+
+type FacilityRequest struct {
+	Code string `json:"code" validate:"required"`
+	Name string `json:"name" validate:"required"`
 }

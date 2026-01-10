@@ -90,6 +90,9 @@ func RunServer() {
 	coffeShop.Post("/:coffeeshopID/upload-image", uploadImageHandler.UploadImages)
 	coffeShop.Post("/:coffeeshopID/facilities", facilityHandler.CreateFacilityCoffeeShop)
 
+	facility := admin.Group("/facilities")
+	facility.Post("/", facilityHandler.CreateFacility)
+
 	go func() {
 		if cfg.App.AppPort == "" {
 			cfg.App.AppPort = os.Getenv("APP_PORT")
