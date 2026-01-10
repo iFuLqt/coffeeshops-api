@@ -11,10 +11,40 @@ import (
 type FacilityService interface {
 	CreateFacilityCoffeeShop(ctx context.Context, req []string, id int) error
 	CreateFacility(ctx context.Context, req entity.FacilityEntity) error
+	UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int) error
+	DeleteFacility(ctx context.Context, id int) error
+	GetFacilities(ctx context.Context) ([]entity.FacilityEntity, error)
 }
 
 type facilityService struct {
 	FacilityRepository repository.FacilityRepository
+}
+
+// DeleteFacility implements [FacilityService].
+func (f *facilityService) DeleteFacility(ctx context.Context, id int) error {
+	err := f.FacilityRepository.DeleteFacility(ctx, id)
+	if err != nil {
+		code := "[SERVICE] DeleteFacility - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
+}
+
+// GetFacilities implements [FacilityService].
+func (f *facilityService) GetFacilities(ctx context.Context) ([]entity.FacilityEntity, error) {
+	results, err := f.FacilityRepository.GetFacilities(ctx)
+	if err != nil {
+		code := "[SERVICE] GetFacilities - 1"
+		log.Errorw(code, err)
+		return nil, err
+	}
+	return results, nil
+}
+
+// UpdateFacility implements [FacilityService].
+func (f *facilityService) UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int) error {
+	panic("unimplemented")
 }
 
 // CreateFacility implements [FacilityService].

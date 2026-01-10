@@ -92,6 +92,8 @@ func RunServer() {
 
 	facility := admin.Group("/facilities")
 	facility.Post("/", facilityHandler.CreateFacility)
+	facility.Get("/", facilityHandler.GetFacilities)
+	facility.Delete("/:facilityID", facilityHandler.DeleteFacility)
 
 	go func() {
 		if cfg.App.AppPort == "" {
