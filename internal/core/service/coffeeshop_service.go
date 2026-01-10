@@ -33,7 +33,13 @@ func (c *coffeeShopService) CreateCoffeeShop(ctx context.Context, req entity.Cof
 
 // DeleteCoffeeShop implements [CoffeeShopService].
 func (c *coffeeShopService) DeleteCoffeeShop(ctx context.Context, id int) error {
-	panic("unimplemented")
+	err := c.CoffeeShopRepository.DeleteCoffeeShop(ctx, id)
+	if err != nil {
+		code := "[SERVICE] DeleteCoffeeShop - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 // GetCoffeeShopByID implements [CoffeeShopService].

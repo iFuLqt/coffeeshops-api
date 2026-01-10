@@ -24,6 +24,7 @@ type CoffeeShopHandler interface {
 
 type coffeeShopHandler struct {
 	CoffeeShopService service.CoffeeShopService
+	ImageService      service.ImageService
 }
 
 // CreateCoffeeShop implements [CoffeeShopHandler].
@@ -114,7 +115,54 @@ func (f *coffeeShopHandler) CreateCoffeeShop(c *fiber.Ctx) error {
 
 // DeleteCoffeeShop implements [CoffeeShopHandler].
 func (f *coffeeShopHandler) DeleteCoffeeShop(c *fiber.Ctx) error {
-	panic("unimplemented")
+	var errResp response.DefaultErrorResponse
+	var resp response.DefaultSuccessResponse
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	idParam := c.Params("coffeeshopID")
+	idCoffeeShop, err := helper.StringToInt(idParam)
+	if err != nil {
+		code := "[HANDLER] DeleteCoffeeShop - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Coffee shop ID must be integer"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = f.ImageService.DeleteImage(c.Context(), int(idCoffeeShop))
+	if err != nil {
+		code := "[HANDLER] DeleteCoffeeShop - 2"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	err = f.CoffeeShopService.DeleteCoffeeShop(c.Context(), int(idCoffeeShop))
+	if err != nil {
+		code := "[HANDLER] DeleteCoffeeShop - 3"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Delete coffee shop successfully"
+	resp.Meta.Errors = nil
+
+	return c.JSON(resp)
 }
 
 // GetCoffeeShopByID implements [CoffeeShopHandler].
@@ -157,12 +205,20 @@ func (f *coffeeShopHandler) GetCoffeeShopByID(c *fiber.Ctx) error {
 		images = append(images, imag)
 	}
 
+	facilities := []response.FacilityResponse{}
+	for _, fac := range result.Facility {
+		facility := response.FacilityResponse{
+			Name: fac.Name,
+		}
+		facilities = append(facilities, facility)
+	}
+
 	respData := response.CoffeeShopByIDResponse{
 		ID:        result.ID,
 		Name:      result.Name,
 		Address:   result.Address,
 		OpenClose: helper.GenerateOpenTime(result.OpenTime, result.CloseTime),
-		Facility:  &response.FacilityCoffeeShopResponse{},
+		Facility:  facilities,
 		Maps:      helper.LinkGoogleMaps(result.Latitude, result.Longitude),
 		Instagram: helper.LinkInstagram(result.Instagram),
 		CreatedBy: &response.UserResponse{
@@ -242,8 +298,9 @@ func (f *coffeeShopHandler) UpdateCoffeeShop(c *fiber.Ctx) error {
 	panic("unimplemented")
 }
 
-func NewCoffeeShopHandler(coffeeShopServ service.CoffeeShopService) CoffeeShopHandler {
+func NewCoffeeShopHandler(coffeeShopServ service.CoffeeShopService, imageService service.ImageService) CoffeeShopHandler {
 	return &coffeeShopHandler{
 		CoffeeShopService: coffeeShopServ,
+		ImageService:      imageService,
 	}
 }

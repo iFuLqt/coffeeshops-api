@@ -12,16 +12,38 @@ import (
 
 	"github.com/ifulqt/coffeeshops-api/config"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
+	"github.com/ifulqt/coffeeshops-api/library/helper"
 )
 
 type CloudFlareR2Adapter interface {
 	UploadImage(ctx context.Context, req entity.FileUploadImageEntity) (string, error)
+	DeleteImage(ctx context.Context, imageUrl string) error
 }
 
 type cloudFlareR2Adapter struct {
 	client  *s3.Client
 	bucket  string
 	baseURL string
+}
+
+// DeleteImage implements [CloudFlareR2Adapter].
+func (c *cloudFlareR2Adapter) DeleteImage(ctx context.Context, imageURL string) error {
+	image, err := helper.ExtractObjectKey(imageURL)
+	if err != nil {
+		code := "[CLOUDFLARE] DeleteImage - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	_, err = c.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key: aws.String(image),
+	})
+	if err != nil{
+		code := "[CLOUDFLARE] DeleteImage - 2"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 func (c *cloudFlareR2Adapter) UploadImage(ctx context.Context, req entity.FileUploadImageEntity) (string, error) {
@@ -61,7 +83,7 @@ func NewCloudFlareR2Adapter(client *s3.Client, cfg *config.Config) CloudFlareR2A
 
 	return &cloudFlareR2Adapter{
 		client:  s3Client,
-		bucket:  cfg.R2.Name,
+		bucket:  cfg.R2.Bucket,
 		baseURL: cfg.R2.PublicURL,
 	}
 }

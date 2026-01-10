@@ -43,7 +43,7 @@ func RunServer() {
 	userRepo := repository.NewUserRepository(db.DB)
 	categoryRepo := repository.NewCategoryRepository(db.DB)
 	coffeeShopRepo := repository.NewCoffeeShopRepository(db.DB)
-	uploadImageRepo := repository.NewUploadImageRepository(db.DB)
+	imageRepo := repository.NewImageRepository(db.DB)
 	facilityRepo := repository.NewFacilityRepository(db.DB)
 
 	// SERVICE
@@ -51,15 +51,15 @@ func RunServer() {
 	userServ := service.NewUserService(userRepo)
 	categoryServ := service.NewCategoryService(categoryRepo)
 	coffeeShopServ := service.NewCoffeeShopService(coffeeShopRepo)
-	uploadImageServ := service.NewUploadImageService(uploadImageRepo, r2Adapter)
+	imageServ := service.NewImageService(imageRepo, r2Adapter)
 	facilityServ := service.NewFacilityService(facilityRepo)
 
 	// HANDLER
 	authHandler := handler.NewAuthHandler(authServ)
 	userHandler := handler.NewUserHandler(userServ)
 	categoryHandler := handler.NewCategoryHandler(categoryServ)
-	coffeeShopHandler := handler.NewCoffeeShopHandler(coffeeShopServ)
-	uploadImageHandler := handler.NewUploadImageHandler(uploadImageServ)
+	coffeeShopHandler := handler.NewCoffeeShopHandler(coffeeShopServ, imageServ)
+	imageHandler := handler.NewImageHandler(imageServ)
 	facilityHandler := handler.NewFacilityHandler(facilityServ)
 
 	app := fiber.New()
@@ -87,7 +87,8 @@ func RunServer() {
 	coffeShop.Post("/", coffeeShopHandler.CreateCoffeeShop)
 	coffeShop.Get("/", coffeeShopHandler.GetCoffeeShops)
 	coffeShop.Get("/:coffeeshopID", coffeeShopHandler.GetCoffeeShopByID)
-	coffeShop.Post("/:coffeeshopID/upload-image", uploadImageHandler.UploadImages)
+	coffeShop.Delete("/:coffeeshopID", coffeeShopHandler.DeleteCoffeeShop)
+	coffeShop.Post("/:coffeeshopID/upload-image", imageHandler.UploadImages)
 	coffeShop.Post("/:coffeeshopID/facilities", facilityHandler.CreateFacilityCoffeeShop)
 
 	facility := admin.Group("/facilities")

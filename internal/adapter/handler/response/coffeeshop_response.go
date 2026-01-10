@@ -10,7 +10,7 @@ type CoffeeShopByIDResponse struct {
 	Instagram string                     `json:"instagram,omitempty"`
 	OpenClose string                     `json:"open_close,omitempty"`
 	Category  string                     `json:"category,omitempty"`
-	Facility  *FacilityCoffeeShopResponse `json:"facility,omitempty"`
+	Facility  []FacilityResponse `json:"facility,omitempty"`
 	CreatedBy *UserResponse               `json:"created_by,omitempty"`
 	UpdatedBy *UserResponse               `json:"updated_by,omitempty"`
 	UpdatedAt time.Time                  `json:"last_update,omitempty"`
@@ -28,13 +28,6 @@ type CoffeeShopsResponse struct {
 
 type CreateCoffeeShopResponse struct {
 	ID int `json:"id"`
-}
-
-type FacilityCoffeeShopResponse struct {
-	Parking    bool `json:"parking,omitempty"`
-	PrayerRoom bool `json:"prayer_room,omitempty"`
-	Wifi       bool `json:"wifi,omitempty"`
-	Gofood     bool `json:"gofood,omitempty"`
 }
 
 

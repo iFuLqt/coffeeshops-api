@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -58,4 +59,12 @@ func CutTime(s string) string {
 		return s
 	}
 	return parts[0] + ":" + parts[1]
+}
+
+func ExtractObjectKey(imageURL string) (string, error) {
+	u, err := url.Parse(imageURL)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimPrefix(u.Path, "/"), nil
 }

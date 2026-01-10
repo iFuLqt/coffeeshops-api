@@ -12,16 +12,16 @@ import (
 	"github.com/ifulqt/coffeeshops-api/library/helper"
 )
 
-type UploadImageHandler interface {
+type ImageHandler interface {
 	UploadImages(c *fiber.Ctx) error
 }
 
-type uploadImageHandler struct {
-	UploadImageService service.UploadImageService
+type imageHandler struct {
+	ImageService service.ImageService
 }
 
 // UploadImages implements [UploadImageHandler].
-func (u *uploadImageHandler) UploadImages(c *fiber.Ctx) error {
+func (u *imageHandler) UploadImages(c *fiber.Ctx) error {
 	var errResp response.DefaultErrorResponse
 	var resp response.DefaultSuccessResponse
 
@@ -70,7 +70,7 @@ func (u *uploadImageHandler) UploadImages(c *fiber.Ctx) error {
 			Name: fmt.Sprintf("%d-%d", int(userID), time.Now().Unix()),
 		}
 
-		imageURL, err := u.UploadImageService.UploadImageR2(c.Context(), uploadReq)
+		imageURL, err := u.ImageService.UploadImageR2(c.Context(), uploadReq)
 		if err != nil {
 			code := "[HANDLER]"
 			log.Errorw(code, err)
@@ -86,7 +86,7 @@ func (u *uploadImageHandler) UploadImages(c *fiber.Ctx) error {
 			IsPrimary:    i == 0,
 		}
 
-		err = u.UploadImageService.UploadImages(c.Context(), reqEntity)
+		err = u.ImageService.UploadImages(c.Context(), reqEntity)
 		if err != nil {
 			code := "[HANDLER] UploadImage - 1"
 			log.Errorw(code, err)
@@ -109,8 +109,8 @@ func (u *uploadImageHandler) UploadImages(c *fiber.Ctx) error {
 	return c.JSON(resp)
 }
 
-func NewUploadImageHandler(uploadImageSev service.UploadImageService) UploadImageHandler {
-	return &uploadImageHandler{
-		UploadImageService: uploadImageSev,
+func NewImageHandler(imageServ service.ImageService) ImageHandler {
+	return &imageHandler{
+		ImageService: imageServ,
 	}
 }

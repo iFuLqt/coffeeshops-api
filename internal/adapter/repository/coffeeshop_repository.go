@@ -49,14 +49,21 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 
 // DeleteCoffeeShop implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) DeleteCoffeeShop(ctx context.Context, id int) error {
-	panic("unimplemented")
+	var modelCoffee model.CoffeeShop
+	err := c.db.Where("id = ?", id).Delete(&modelCoffee).Error
+	if err != nil {
+		code := "[REPOSITORY] DeleteCoffeeShop - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 // GetCoffeeShopByID implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int) (*entity.CoffeeShopEntity, error) {
 	var modelCoffe model.CoffeeShop
 	err := c.db.Where("id = ?", id).Preload("Category").Preload("UserUpdate").Preload("UserCreate").
-		Preload("Images").First(&modelCoffe).Error
+		Preload("Images").Preload("CoffeeShopFacility.Facility").First(&modelCoffe).Error
 	if err != nil {
 		code := "[REPOSITORY] GetCoffeeShopByID - 1"
 		log.Errorw(code, err)
@@ -70,6 +77,14 @@ func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int) (*
 			IsPrimary: valImage.IsPrimary,
 		}
 		imageSlics = append(imageSlics, imageEnt)
+	}
+
+	facilities := []entity.FacilityEntity{}
+	for _, faci := range modelCoffe.CoffeeShopFacility {
+		facility := entity.FacilityEntity{
+			Name: faci.Facility.Name,
+		}
+		facilities = append(facilities, facility)
 	}
 
 	coffeeEnt := entity.CoffeeShopEntity{
@@ -93,6 +108,7 @@ func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int) (*
 			ID:   modelCoffe.Category.ID,
 			Name: modelCoffe.Category.Name,
 		},
+		Facility: facilities,
 		Image: imageSlics,
 	}
 	return &coffeeEnt, nil

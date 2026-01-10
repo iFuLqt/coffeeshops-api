@@ -21,7 +21,7 @@ type Psql struct {
 }
 
 type CloudFlareR2 struct {
-	Name      string `json:"name"`
+	Bucket      string `json:"bucket"`
 	ApiKey    string `json:"api_key"`
 	ApiSecret string `json:"api_secret"`
 	Token     string `json:"token"`
@@ -54,7 +54,7 @@ func NewConfig() *Config {
 			DBMaxIdle:  viper.GetInt("DATABASE_MAX_IDLE_CONNECTION"),
 		},
 		R2: CloudFlareR2{
-			Name:      viper.GetString("CLOUDFLARE_R2_BUCKET_NAME"),
+			Bucket:      viper.GetString("CLOUDFLARE_R2_BUCKET_NAME"),
 			ApiKey:    viper.GetString("CLOUDFLARE_R2_API_KEY"),
 			ApiSecret: viper.GetString("CLOUDFLARE_R2_API_SECRET"),
 			Token:     viper.GetString("CLOUDFLARE_R2_TOKEN"),
