@@ -21,7 +21,7 @@ type userRepository struct {
 // CheckCurrentPassword implements [UserRepository].
 func (u *userRepository) GetUserByID(ctx context.Context, id int64) (*entity.UserEntity, error) {
 	var modelUser model.User
-	err := u.db.Where("id = ?", id).First(&modelUser).Error
+	err := u.db.WithContext(ctx).Where("id = ?", id).First(&modelUser).Error
 	if err != nil {
 		code := "[REPOSITORY] GetUserByID - 1"
 		log.Errorw(code, err)
@@ -41,7 +41,7 @@ func (u *userRepository) GetUserByID(ctx context.Context, id int64) (*entity.Use
 
 // UpdatePassword implements [UserRepository].
 func (u *userRepository) UpdatePassword(ctx context.Context, newPass string, id int64) error {
-	err := u.db.Model(&model.User{}).Where("id = ?", id).Update("password", newPass).Error
+	err := u.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Update("password", newPass).Error
 	if err != nil {
 		code := "[REPOSITORY] UpdatePassword - 2"
 		log.Errorw(code, err)

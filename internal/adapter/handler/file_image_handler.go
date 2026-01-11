@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler/request"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler/response"
+	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/service"
 	"github.com/ifulqt/coffeeshops-api/library/helper"
@@ -17,10 +19,68 @@ import (
 type ImageHandler interface {
 	UploadImages(c *fiber.Ctx) error
 	DeleteImagesForCoffeeShop(c *fiber.Ctx) error
+	UpdatePrimaryImage(c *fiber.Ctx) error
 }
 
 type imageHandler struct {
 	ImageService service.ImageService
+}
+
+// UpdatePrimaryImage implements [ImageHandler].
+func (u *imageHandler) UpdatePrimaryImage(c *fiber.Ctx) error {
+	var errResp response.DefaultErrorResponse
+	var resp response.DefaultSuccessResponse
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	idCoffeeParam := c.Params("coffeeshopID")
+	idCoffeeShop, err := helper.StringToInt(idCoffeeParam)
+	if err != nil || idCoffeeShop <= 0 {
+		code := "[HANDLER] UpdatePrimaryImage - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Coffee shop ID must be integer"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	idImageParam := c.Params("imageID")
+	idImage, err := helper.StringToInt(idImageParam)
+	if err != nil || idImage <= 0 {
+		code := "[HANDLER] UpdatePrimaryImage - 2"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Image ID must be integer"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = u.ImageService.UpdatePrimaryImage(c.Context(), idImage, idCoffeeShop)
+	if err != nil {
+		code := "[HANDLER] UpdatePrimaryImage - 3"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Errors = nil
+		if errors.Is(err, domerror.ErrDataNotFound) {
+			errResp.Meta.Message = "Image not found"
+			return c.Status(fiber.StatusBadRequest).JSON(errResp)
+		}
+		errResp.Meta.Message = "Internal server error"
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Update primary image successfully"
+	resp.Meta.Errors = nil
+
+	return c.JSON(resp)
 }
 
 // DeleteImages implements [ImageHandler].

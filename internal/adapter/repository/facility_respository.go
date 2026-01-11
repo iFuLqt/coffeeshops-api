@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
@@ -26,7 +27,7 @@ type facilityRepository struct {
 // DeleteFacility implements [FacilityRepository].
 func (f *facilityRepository) DeleteFacility(ctx context.Context, id int64) error {
 	var modelFacility model.Facility
-	err := f.db.Where("id = ?", id).Delete(&modelFacility).Error
+	err := f.db.WithContext(ctx).Where("id = ?", id).Delete(&modelFacility).Error
 	if err != nil {
 		code := "[REPOSITORY] DeleteFacility - 1"
 		log.Errorw(code, err)
@@ -38,7 +39,7 @@ func (f *facilityRepository) DeleteFacility(ctx context.Context, id int64) error
 // GetFacilities implements [FacilityRepository].
 func (f *facilityRepository) GetFacilities(ctx context.Context) ([]entity.FacilityEntity, error) {
 	var modelFac []model.Facility
-	err := f.db.Order("id DESC").Find(&modelFac).Error
+	err := f.db.WithContext(ctx).Order("id DESC").Find(&modelFac).Error
 	if err != nil {
 		code := "[REPOSITORY] GetFacilities - 1"
 		log.Errorw(code, err)
@@ -47,7 +48,7 @@ func (f *facilityRepository) GetFacilities(ctx context.Context) ([]entity.Facili
 	entFacs := []entity.FacilityEntity{}
 	for _, val := range modelFac {
 		entFac := entity.FacilityEntity{
-			ID: val.ID,
+			ID:   val.ID,
 			Code: val.Code,
 			Name: val.Name,
 		}
@@ -62,9 +63,14 @@ func (f *facilityRepository) UpdateFacility(ctx context.Context, req entity.Faci
 		Name: req.Name,
 		Code: req.Code,
 	}
-	err := f.db.Where("id = ?", id).Updates(&modelFacility).Error
+	err := f.db.WithContext(ctx).Where("id = ?", id).Updates(&modelFacility).Error
 	if err != nil {
-		code := "[HANDLER] UpdateFacility - 1"
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			code := "[HANDLER] UpdateFacility - 1"
+			log.Errorw(code, err)
+			return domerror.ErrDuplicate
+		}
+		code := "[HANDLER] UpdateFacility - 2"
 		log.Errorw(code, err)
 		return err
 	}
@@ -73,24 +79,17 @@ func (f *facilityRepository) UpdateFacility(ctx context.Context, req entity.Faci
 
 // CreateFacility implements [FacilityRepository].
 func (f *facilityRepository) CreateFacility(ctx context.Context, req entity.FacilityEntity) error {
-	var count int64
-	err := f.db.Table("facilities").Where("code = ?", req.Code).Count(&count).Error
-	if err != nil {
-		code := "[REPOSITORY] CreateFacility - 1"
-		log.Errorw(code, err)
-		return err
-	}
-
-	if count > 0 {
-		return domerror.ErrDuplicate
-	}
-
 	modelFacility := model.Facility{
 		Code: req.Code,
 		Name: req.Name,
 	}
-	err = f.db.Create(&modelFacility).Error
+	err := f.db.WithContext(ctx).Create(&modelFacility).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			code := "[REPOSITORY] CreateFacility - 1"
+			log.Errorw(code, err)
+			return domerror.ErrDuplicate
+		}
 		code := "[REPOSITORY] CreateFacility - 2"
 		log.Errorw(code, err)
 		return err
@@ -101,7 +100,7 @@ func (f *facilityRepository) CreateFacility(ctx context.Context, req entity.Faci
 // CodeForCreateFCS implements [FacilityRepository].
 func (f *facilityRepository) CodeForCreateFCS(ctx context.Context, code string) (int64, error) {
 	var modelFacility model.Facility
-	err := f.db.Where("code = ?", code).Find(&modelFacility).Error
+	err := f.db.WithContext(ctx).Where("code = ?", code).Find(&modelFacility).Error
 	if err != nil {
 		code := "[REPOSITORY] CodeForCreateFCS - 1"
 		log.Errorw(code, err)
@@ -116,7 +115,7 @@ func (f *facilityRepository) CreateFacilityCoffeeShop(ctx context.Context, idFac
 		CoffeeShopID: idCoffeShop,
 		FacilityID:   idFacility,
 	}
-	err := f.db.Create(&modelCSFacility).Error
+	err := f.db.WithContext(ctx).Create(&modelCSFacility).Error
 	if err != nil {
 		code := "[REPOSITORY] CreateFacilityCoffeeShop - 1"
 		log.Errorw(code, err)

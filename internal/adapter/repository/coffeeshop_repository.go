@@ -38,7 +38,7 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 		UpdatedAt:   req.UpdatedAt,
 	}
 
-	err := c.db.Create(&modelCoffe).Error
+	err := c.db.WithContext(ctx).Create(&modelCoffe).Error
 	if err != nil {
 		code := "[REPOSITORY] CreateCoffeeShop - 1"
 		log.Errorw(code, err)
@@ -50,7 +50,7 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 // DeleteCoffeeShop implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) DeleteCoffeeShop(ctx context.Context, id int64) error {
 	var modelCoffee model.CoffeeShop
-	err := c.db.Where("id = ?", id).Delete(&modelCoffee).Error
+	err := c.db.WithContext(ctx).Where("id = ?", id).Delete(&modelCoffee).Error
 	if err != nil {
 		code := "[REPOSITORY] DeleteCoffeeShop - 1"
 		log.Errorw(code, err)
@@ -62,7 +62,7 @@ func (c *coffeeShopRepository) DeleteCoffeeShop(ctx context.Context, id int64) e
 // GetCoffeeShopByID implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int64) (*entity.CoffeeShopEntity, error) {
 	var modelCoffe model.CoffeeShop
-	err := c.db.Where("id = ?", id).Preload("Category").Preload("UserUpdate").Preload("UserCreate").
+	err := c.db.WithContext(ctx).Where("id = ?", id).Preload("Category").Preload("UserUpdate").Preload("UserCreate").
 		Preload("Images").Preload("CoffeeShopFacility.Facility").First(&modelCoffe).Error
 	if err != nil {
 		code := "[REPOSITORY] GetCoffeeShopByID - 1"
@@ -117,7 +117,7 @@ func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int64) 
 // GetCoffeeShops implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error) {
 	var modelCoffe []model.CoffeeShop
-	err := c.db.Preload("Category").Preload("Images").Find(&modelCoffe).Error
+	err := c.db.WithContext(ctx).Preload("Category").Preload("Images").Find(&modelCoffe).Error
 	if err != nil {
 		code := "[REPOSITORY] GetCoffeeShops - 1"
 		log.Errorw(code, err)

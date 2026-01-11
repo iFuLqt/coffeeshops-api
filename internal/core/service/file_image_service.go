@@ -14,11 +14,23 @@ type ImageService interface {
 	UploadImageR2(ctx context.Context, req entity.FileUploadImageEntity) (string, error)
 	DeleteImages(ctx context.Context, idCoffeeShop int64) error
 	DeleteImagesForCoffeeShop(ctx context.Context, idImage []int64, idCoffeeShop int64) error
+	UpdatePrimaryImage(ctx context.Context, idImage, idCoffeeShop int64) error
 }
 
 type imageService struct {
 	ImageRepository repository.ImageRepository
 	R2              cloudflare.CloudFlareR2Adapter
+}
+
+// UpdatePrimaryImage implements [ImageService].
+func (u *imageService) UpdatePrimaryImage(ctx context.Context, idImage int64, idCoffeeShop int64) error {
+	err := u.ImageRepository.UpdatePrimaryImage(ctx, idImage, idCoffeeShop)
+	if err != nil {
+		code := "[SERVICE] UpdatePrimaryImage - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 // DeleteImageCoffeeShopByIDImage implements [ImageService].

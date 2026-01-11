@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/model"
 	"gorm.io/gorm"
@@ -14,10 +15,46 @@ type ImageRepository interface {
 	GetImageByIDCoffeeShop(ctx context.Context, idCoffeeShop int64) ([]entity.FileDeleteImageEntity, error)
 	GetImageByIDs(ctx context.Context, idImage []int64, idCoffeeShop int64) ([]entity.ImageEntity, error)
 	DeleteImagesForCoffeeShop(ctx context.Context, idImage []int64, idCoffeeShop int64) error
+	UpdatePrimaryImage(ctx context.Context, idImage int64, idCoffeeShop int64) error
 }
 
 type imageRepository struct {
 	db *gorm.DB
+}
+
+// UpdatePrimaryImage implements [ImageRepository].
+func (u *imageRepository) UpdatePrimaryImage(ctx context.Context, idImage int64, idCoffeeShop int64) error {
+	var modelImage model.CoffeeShopImage
+	err := u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Model(&modelImage).Where("id = ?", idImage).Where("coffee_shop_id = ?", idCoffeeShop).
+			Update("is_primary", true)
+		if result.Error != nil {
+			code := "[REPOSITORY] UpdatePrimaryImage - 1"
+			log.Errorw(code, result.Error)
+			return result.Error
+		}
+
+		if result.RowsAffected == 0 {
+			code := "[REPOSITORY] UpdatePrimaryImage - 2"
+			log.Errorw(code, domerror.ErrDataNotFound)
+			return domerror.ErrDataNotFound
+		}
+
+		err := tx.Model(&modelImage).Where("coffee_shop_id = ? AND id != ?", idCoffeeShop, idImage).
+			Update("is_primary", false).Error
+		if err != nil {
+			code := "[REPOSITORY] UpdatePrimaryImage - 3"
+			log.Errorw(code, err)
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		code := "[REPOSITORY] UpdatePrimaryImage - 4"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 // DeleteImageCoffeeShopByIDImage implements [ImageRepository].

@@ -28,7 +28,7 @@ func (c *categoryRepository) CreateCategory(ctx context.Context, req entity.Cate
 		Slug:        req.Slug,
 		CreatedByID: req.CreatedBy.ID,
 	}
-	err := c.db.Create(&modelCategory).Error
+	err := c.db.WithContext(ctx).Create(&modelCategory).Error
 	if err != nil {
 		code := "[REPOSITORY] CreateCategory - 1"
 		log.Errorw(code, err)
@@ -40,7 +40,7 @@ func (c *categoryRepository) CreateCategory(ctx context.Context, req entity.Cate
 // DeleteCategory implements [CategoryRepository].
 func (c *categoryRepository) DeleteCategory(ctx context.Context, id int64) error {
 	var modelCategory model.Category
-	err := c.db.Where("id = ?", id).Delete(&modelCategory).Error
+	err := c.db.WithContext(ctx).Where("id = ?", id).Delete(&modelCategory).Error
 	if err != nil {
 		code := "[REPOSITORY] DeleteCategory - 2"
 		log.Errorw(code, err)
@@ -52,7 +52,7 @@ func (c *categoryRepository) DeleteCategory(ctx context.Context, id int64) error
 // GetCategories implements [CategoryRepository].
 func (c *categoryRepository) GetCategories(ctx context.Context) ([]entity.CategoryEntity, error) {
 	var modelCategory []model.Category
-	err := c.db.Order("created_at DESC").Preload("User").Find(&modelCategory).Error
+	err := c.db.WithContext(ctx).Order("created_at DESC").Preload("User").Find(&modelCategory).Error
 	if err != nil {
 		code := "[REPOSITORY] GetCategories - 1"
 		log.Errorw(code, err)
@@ -73,13 +73,12 @@ func (c *categoryRepository) GetCategories(ctx context.Context) ([]entity.Catego
 	}
 
 	return resps, nil
-
 }
 
 // GetCategoryByID implements [CategoryRepository].
 func (c *categoryRepository) GetCategoryByID(ctx context.Context, id int64) (*entity.CategoryEntity, error) {
 	var categoryModel model.Category
-	err := c.db.Where("id = ?", id).Preload("User").First(&categoryModel).Error
+	err := c.db.WithContext(ctx).Where("id = ?", id).Preload("User").First(&categoryModel).Error
 	if err != nil {
 		code := "[REPOSITORY] GetCategoryByID - 1"
 		log.Errorw(code, err)
@@ -106,7 +105,7 @@ func (c *categoryRepository) UpdateCategory(ctx context.Context, req entity.Cate
 		Slug:        req.Slug,
 		CreatedByID: req.CreatedBy.ID,
 	}
-	err := c.db.Where("id = ?", req.ID).Updates(modelCategory).Error
+	err := c.db.WithContext(ctx).Where("id = ?", req.ID).Updates(&modelCategory).Error
 	if err != nil {
 		code := "[REPOSITORY] UpdateCategory - 1"
 		log.Errorw(code, err)
