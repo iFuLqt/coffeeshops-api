@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler/request"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler/response"
+	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/service"
 	"github.com/ifulqt/coffeeshops-api/library/helper"
@@ -291,8 +294,12 @@ func (f *categoryHandler) UpdateCategory(c *fiber.Ctx) error {
 		code := "[HANDLER] UpdateCategory - 4"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
-		errResp.Meta.Message = "Internal server error"
 		errResp.Meta.Errors = nil
+		if errors.Is(err, domerror.ErrDataNotFound) {
+			errResp.Meta.Message = "Category not found"
+			return c.Status(fiber.StatusBadRequest).JSON(errResp)
+		}
+		errResp.Meta.Message = "Internal server error"
 		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
 	}
 

@@ -171,8 +171,15 @@ func (f *facilityHandler) UpdateFacility(c *fiber.Ctx) error {
 		code := "[HANDLER] UpdateFacility - 4"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
-		errResp.Meta.Message = "Internal server error"
 		errResp.Meta.Errors = nil
+		if errors.Is(err, domerror.ErrDataNotFound) {
+			errResp.Meta.Message = "Facility not found"
+			return c.Status(fiber.StatusNotFound).JSON(errResp)
+		} else if errors.Is(err, domerror.ErrDuplicate) {
+			errResp.Meta.Message = "Code is not ready"
+			return c.Status(fiber.StatusBadRequest).JSON(errResp)
+		}
+		errResp.Meta.Message = "Internal server error"
 		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
 	}
 

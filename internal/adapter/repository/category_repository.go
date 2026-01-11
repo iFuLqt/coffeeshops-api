@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/model"
 	"gorm.io/gorm"
@@ -105,12 +106,19 @@ func (c *categoryRepository) UpdateCategory(ctx context.Context, req entity.Cate
 		Slug:        req.Slug,
 		CreatedByID: req.CreatedBy.ID,
 	}
-	err := c.db.WithContext(ctx).Where("id = ?", req.ID).Updates(&modelCategory).Error
-	if err != nil {
+	result := c.db.WithContext(ctx).Where("id = ?", req.ID).Updates(&modelCategory)
+	if result.Error != nil {
 		code := "[REPOSITORY] UpdateCategory - 1"
-		log.Errorw(code, err)
-		return err
+		log.Errorw(code, result.Error)
+		return result.Error
 	}
+
+	if result.RowsAffected == 0 {
+		code := "[REPOSITORY] UpdateCategory - 2"
+		log.Errorw(code, domerror.ErrDataNotFound)
+		return domerror.ErrDataNotFound
+	}
+
 	return nil
 }
 

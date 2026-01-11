@@ -63,16 +63,21 @@ func (f *facilityRepository) UpdateFacility(ctx context.Context, req entity.Faci
 		Name: req.Name,
 		Code: req.Code,
 	}
-	err := f.db.WithContext(ctx).Where("id = ?", id).Updates(&modelFacility).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			code := "[HANDLER] UpdateFacility - 1"
-			log.Errorw(code, err)
+	result := f.db.WithContext(ctx).Where("id = ?", id).Updates(&modelFacility)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+			code := "[REPOSITORY] UpdateFacility - 1"
+			log.Errorw(code, result.Error)
 			return domerror.ErrDuplicate
 		}
-		code := "[HANDLER] UpdateFacility - 2"
-		log.Errorw(code, err)
-		return err
+		code := "[REPOSITORY] UpdateFacility - 2"
+		log.Errorw(code, result.Error)
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		code := "[REPOSITORY] UpdateFacility - 3"
+		log.Errorw(code, domerror.ErrDataNotFound)
+		return domerror.ErrDataNotFound
 	}
 	return nil
 }
