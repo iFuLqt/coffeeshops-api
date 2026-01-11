@@ -1,8 +1,8 @@
 package entity
 
 type CoffeeShopFacilityEntity struct {
-	ID           int
-	CoffeeShopID int
-	FacilityID   int
+	ID           int64
+	CoffeeShopID int64
+	FacilityID   int64
 	Facility     FacilityEntity
 }

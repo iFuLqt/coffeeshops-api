@@ -3,7 +3,7 @@ package entity
 import "time"
 
 type CoffeeShopEntity struct {
-	ID int
+	ID int64
 	Name       string
 	Address    string
 	Latitude   float64

@@ -10,7 +10,7 @@ import (
 )
 
 type UserService interface {
-	UpdatePassword(ctx context.Context, newPass string, currentPass string, id int) error
+	UpdatePassword(ctx context.Context, newPass string, currentPass string, id int64) error
 }
 
 type userService struct {
@@ -18,7 +18,7 @@ type userService struct {
 }
 
 // UpdatePassword implements [UserService].
-func (u *userService) UpdatePassword(ctx context.Context, newPass string, currentPass string, id int) error {
+func (u *userService) UpdatePassword(ctx context.Context, newPass string, currentPass string, id int64) error {
 	result, err := u.UserRepository.GetUserByID(ctx, id)
 	if err != nil {
 		code := "[SERVICE] UpdatePassword - 1"

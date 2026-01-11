@@ -10,8 +10,8 @@ import (
 )
 
 type UserRepository interface {
-	UpdatePassword(ctx context.Context, newPass string, id int) error
-	GetUserByID(ctx context.Context, id int) (*entity.UserEntity, error)
+	UpdatePassword(ctx context.Context, newPass string, id int64) error
+	GetUserByID(ctx context.Context, id int64) (*entity.UserEntity, error)
 }
 
 type userRepository struct {
@@ -19,7 +19,7 @@ type userRepository struct {
 }
 
 // CheckCurrentPassword implements [UserRepository].
-func (u *userRepository) GetUserByID(ctx context.Context, id int) (*entity.UserEntity, error) {
+func (u *userRepository) GetUserByID(ctx context.Context, id int64) (*entity.UserEntity, error) {
 	var modelUser model.User
 	err := u.db.Where("id = ?", id).First(&modelUser).Error
 	if err != nil {
@@ -40,7 +40,7 @@ func (u *userRepository) GetUserByID(ctx context.Context, id int) (*entity.UserE
 }
 
 // UpdatePassword implements [UserRepository].
-func (u *userRepository) UpdatePassword(ctx context.Context, newPass string, id int) error {
+func (u *userRepository) UpdatePassword(ctx context.Context, newPass string, id int64) error {
 	err := u.db.Model(&model.User{}).Where("id = ?", id).Update("password", newPass).Error
 	if err != nil {
 		code := "[REPOSITORY] UpdatePassword - 2"

@@ -8,5 +8,5 @@ type CoffeeShopRequest struct {
 	OpenTime   string  `json:"open_time" validate:"required"`
 	CloseTime  string  `json:"close_time" validate:"required"`
 	Instagram  string  `json:"instagram" validate:"required"`
-	CategoryID int     `json:"category_id" validate:"required"`
+	CategoryID int64     `json:"category_id" validate:"required"`
 }

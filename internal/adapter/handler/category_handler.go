@@ -67,7 +67,7 @@ func (f *categoryHandler) CreateCategory(c *fiber.Ctx) error {
 	reqEntity := entity.CategoryEntity{
 		Name: req.Category,
 		CreatedBy: entity.UserEntity{
-			ID: int(userID),
+			ID: int64(userID),
 		},
 	}
 
@@ -113,7 +113,7 @@ func (f *categoryHandler) DeleteCategory(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
-	err = f.CategoryService.DeleteCategory(c.Context(), int(id))
+	err = f.CategoryService.DeleteCategory(c.Context(), int64(id))
 	if err != nil {
 		code := "[HANDLER] DeleteCategory - 2"
 		log.Errorw(code, err)
@@ -201,7 +201,7 @@ func (f *categoryHandler) GetCategoryByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
-	result, err := f.CategoryService.GetCategoryByID(c.Context(), int(id))
+	result, err := f.CategoryService.GetCategoryByID(c.Context(), int64(id))
 	if err != nil {
 		code := "[HANDLER] GetCategoryByID - 2"
 		log.Errorw(code, err)
@@ -282,7 +282,7 @@ func (f *categoryHandler) UpdateCategory(c *fiber.Ctx) error {
 	}
 
 	reqEntity := entity.CategoryEntity{
-		ID: int(id),
+		ID: int64(id),
 		Name: req.Category,
 	}
 

@@ -76,10 +76,10 @@ func (f *coffeeShopHandler) CreateCoffeeShop(c *fiber.Ctx) error {
 		CloseTime: req.CloseTime,
 		Instagram: req.Instagram,
 		UserCreate: entity.UserEntity{
-			ID: int(userID),
+			ID: int64(userID),
 		},
 		UserUpdate: entity.UserEntity{
-			ID: int(userID),
+			ID: int64(userID),
 		},
 		Category: entity.CategoryEntity{
 			ID: req.CategoryID,
@@ -138,7 +138,7 @@ func (f *coffeeShopHandler) DeleteCoffeeShop(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
-	err = f.ImageService.DeleteImage(c.Context(), int(idCoffeeShop))
+	err = f.ImageService.DeleteImages(c.Context(), int64(idCoffeeShop))
 	if err != nil {
 		code := "[HANDLER] DeleteCoffeeShop - 2"
 		log.Errorw(code, err)
@@ -148,7 +148,7 @@ func (f *coffeeShopHandler) DeleteCoffeeShop(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
 	}
 
-	err = f.CoffeeShopService.DeleteCoffeeShop(c.Context(), int(idCoffeeShop))
+	err = f.CoffeeShopService.DeleteCoffeeShop(c.Context(), int64(idCoffeeShop))
 	if err != nil {
 		code := "[HANDLER] DeleteCoffeeShop - 3"
 		log.Errorw(code, err)
@@ -188,7 +188,7 @@ func (f *coffeeShopHandler) GetCoffeeShopByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
-	result, err := f.CoffeeShopService.GetCoffeeShopByID(c.Context(), int(id))
+	result, err := f.CoffeeShopService.GetCoffeeShopByID(c.Context(), int64(id))
 	if err != nil {
 		errResp.Meta.Status = false
 		errResp.Meta.Message = "Coffee shop ID salah"

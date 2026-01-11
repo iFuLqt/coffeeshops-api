@@ -9,10 +9,10 @@ import (
 )
 
 type FacilityService interface {
-	CreateFacilityCoffeeShop(ctx context.Context, req []string, id int) error
+	CreateFacilityCoffeeShop(ctx context.Context, req []string, id int64) error
 	CreateFacility(ctx context.Context, req entity.FacilityEntity) error
-	UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int) error
-	DeleteFacility(ctx context.Context, id int) error
+	UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int64) error
+	DeleteFacility(ctx context.Context, id int64) error
 	GetFacilities(ctx context.Context) ([]entity.FacilityEntity, error)
 }
 
@@ -21,7 +21,7 @@ type facilityService struct {
 }
 
 // DeleteFacility implements [FacilityService].
-func (f *facilityService) DeleteFacility(ctx context.Context, id int) error {
+func (f *facilityService) DeleteFacility(ctx context.Context, id int64) error {
 	err := f.FacilityRepository.DeleteFacility(ctx, id)
 	if err != nil {
 		code := "[SERVICE] DeleteFacility - 1"
@@ -43,7 +43,7 @@ func (f *facilityService) GetFacilities(ctx context.Context) ([]entity.FacilityE
 }
 
 // UpdateFacility implements [FacilityService].
-func (f *facilityService) UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int) error {
+func (f *facilityService) UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int64) error {
 	err := f.FacilityRepository.UpdateFacility(ctx, req, id)
 	if err != nil {
 		code := "[SERVICE] UpdateFacility - 1"
@@ -65,7 +65,7 @@ func (f *facilityService) CreateFacility(ctx context.Context, req entity.Facilit
 }
 
 // CreateFacilityCoffeeShop implements [FacilityService].
-func (f *facilityService) CreateFacilityCoffeeShop(ctx context.Context, facilityCodes []string, idCoffeeShop int) error {
+func (f *facilityService) CreateFacilityCoffeeShop(ctx context.Context, facilityCodes []string, idCoffeeShop int64) error {
 	for _, code := range facilityCodes {
 		idFacility, err := f.FacilityRepository.CodeForCreateFCS(ctx, code)
 		if err != nil {

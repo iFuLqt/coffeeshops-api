@@ -10,11 +10,11 @@ import (
 )
 
 type CoffeeShopRepository interface {
-	CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int, error)
+	CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int64, error)
 	GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error)
-	GetCoffeeShopByID(ctx context.Context, id int) (*entity.CoffeeShopEntity, error)
+	GetCoffeeShopByID(ctx context.Context, id int64) (*entity.CoffeeShopEntity, error)
 	UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) error
-	DeleteCoffeeShop(ctx context.Context, id int) error
+	DeleteCoffeeShop(ctx context.Context, id int64) error
 }
 
 type coffeeShopRepository struct {
@@ -22,7 +22,7 @@ type coffeeShopRepository struct {
 }
 
 // CreateCoffeeShop implements [CoffeeShopRepository].
-func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int, error) {
+func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int64, error) {
 	modelCoffe := model.CoffeeShop{
 		Name:        req.Name,
 		Address:     req.Address,
@@ -48,7 +48,7 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 }
 
 // DeleteCoffeeShop implements [CoffeeShopRepository].
-func (c *coffeeShopRepository) DeleteCoffeeShop(ctx context.Context, id int) error {
+func (c *coffeeShopRepository) DeleteCoffeeShop(ctx context.Context, id int64) error {
 	var modelCoffee model.CoffeeShop
 	err := c.db.Where("id = ?", id).Delete(&modelCoffee).Error
 	if err != nil {
@@ -60,7 +60,7 @@ func (c *coffeeShopRepository) DeleteCoffeeShop(ctx context.Context, id int) err
 }
 
 // GetCoffeeShopByID implements [CoffeeShopRepository].
-func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int) (*entity.CoffeeShopEntity, error) {
+func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int64) (*entity.CoffeeShopEntity, error) {
 	var modelCoffe model.CoffeeShop
 	err := c.db.Where("id = ?", id).Preload("Category").Preload("UserUpdate").Preload("UserCreate").
 		Preload("Images").Preload("CoffeeShopFacility.Facility").First(&modelCoffe).Error
@@ -88,14 +88,14 @@ func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int) (*
 	}
 
 	coffeeEnt := entity.CoffeeShopEntity{
-		ID:         modelCoffe.ID,
-		Name:       modelCoffe.Name,
-		Address:    modelCoffe.Address,
-		Latitude:   modelCoffe.Latitude,
-		Longitude:  modelCoffe.Longitude,
-		OpenTime:   modelCoffe.OpenTime,
-		CloseTime:  modelCoffe.CloseTime,
-		Instagram:  modelCoffe.Instagram,
+		ID:        modelCoffe.ID,
+		Name:      modelCoffe.Name,
+		Address:   modelCoffe.Address,
+		Latitude:  modelCoffe.Latitude,
+		Longitude: modelCoffe.Longitude,
+		OpenTime:  modelCoffe.OpenTime,
+		CloseTime: modelCoffe.CloseTime,
+		Instagram: modelCoffe.Instagram,
 		UserCreate: entity.UserEntity{
 			ID:   modelCoffe.UserCreate.ID,
 			Name: modelCoffe.UserCreate.Name,
@@ -109,7 +109,7 @@ func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int) (*
 			Name: modelCoffe.Category.Name,
 		},
 		Facility: facilities,
-		Image: imageSlics,
+		Image:    imageSlics,
 	}
 	return &coffeeEnt, nil
 }

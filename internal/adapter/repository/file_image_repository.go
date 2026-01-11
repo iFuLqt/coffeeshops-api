@@ -11,15 +11,48 @@ import (
 
 type ImageRepository interface {
 	UploadImages(ctx context.Context, req entity.ImageEntity) error
-	GetImageByIDCoffeeShop(ctx context.Context, idCoffeeShop int) ([]entity.FileDeleteImageEntity, error)
+	GetImageByIDCoffeeShop(ctx context.Context, idCoffeeShop int64) ([]entity.FileDeleteImageEntity, error)
+	GetImageByIDs(ctx context.Context, idImage []int64, idCoffeeShop int64) ([]entity.ImageEntity, error)
+	DeleteImagesForCoffeeShop(ctx context.Context, idImage []int64, idCoffeeShop int64) error
 }
 
 type imageRepository struct {
 	db *gorm.DB
 }
 
+// DeleteImageCoffeeShopByIDImage implements [ImageRepository].
+func (u *imageRepository) DeleteImagesForCoffeeShop(ctx context.Context, idImage []int64, idCoffeeShop int64) error {
+	var modelImage model.CoffeeShopImage
+	err := u.db.Where("id IN ?", idImage).Where("coffee_shop_id = ?", idCoffeeShop).Delete(&modelImage).Error
+	if err != nil {
+		code := "[REPOSITORY] DeleteImagesForCoffeeShop - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
+}
+
+// GetImageByIDp implements [ImageRepository].
+func (u *imageRepository) GetImageByIDs(ctx context.Context, idImage []int64, idCoffeeShop int64) ([]entity.ImageEntity, error) {
+	var modelImage []model.CoffeeShopImage
+	err := u.db.Where("id IN ?", idImage).Where("coffee_shop_id = ?", idCoffeeShop).Find(&modelImage).Error
+	if err != nil {
+		code := "[REPOSITORY] GetImageByID - 1"
+		log.Errorw(code, err)
+		return nil, err
+	}
+	resEntitys := []entity.ImageEntity{}
+	for _, res := range modelImage {
+		resEntity := entity.ImageEntity{
+			Image: res.Image,
+		}
+		resEntitys = append(resEntitys, resEntity)
+	}
+	return resEntitys, nil
+}
+
 // GetImageByIDCoffeeShop implements [UploadImageRepository].
-func (u *imageRepository) GetImageByIDCoffeeShop(ctx context.Context, idCoffeeShop int) ([]entity.FileDeleteImageEntity, error) {
+func (u *imageRepository) GetImageByIDCoffeeShop(ctx context.Context, idCoffeeShop int64) ([]entity.FileDeleteImageEntity, error) {
 	var modelImage []model.CoffeeShopImage
 	err := u.db.Where("coffee_shop_id = ?", idCoffeeShop).Find(&modelImage).Error
 	if err != nil {

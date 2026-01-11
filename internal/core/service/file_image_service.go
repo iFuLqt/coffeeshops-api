@@ -12,16 +12,45 @@ import (
 type ImageService interface {
 	UploadImages(ctx context.Context, req entity.ImageEntity) error
 	UploadImageR2(ctx context.Context, req entity.FileUploadImageEntity) (string, error)
-	DeleteImage(ctx context.Context, idCoffeeShop int) error
+	DeleteImages(ctx context.Context, idCoffeeShop int64) error
+	DeleteImagesForCoffeeShop(ctx context.Context, idImage []int64, idCoffeeShop int64) error
 }
 
 type imageService struct {
 	ImageRepository repository.ImageRepository
-	R2                    cloudflare.CloudFlareR2Adapter
+	R2              cloudflare.CloudFlareR2Adapter
+}
+
+// DeleteImageCoffeeShopByIDImage implements [ImageService].
+func (u *imageService) DeleteImagesForCoffeeShop(ctx context.Context, idImage []int64, idCoffeeShop int64) error {
+	results, err := u.ImageRepository.GetImageByIDs(ctx, idImage, idCoffeeShop)
+	if err != nil {
+		code := "[SERVICE] DeleteImagesForCoffeeShop - 1"
+		log.Errorw(code, err)
+		return err
+	}
+
+	for _, image := range results {
+		err := u.R2.DeleteImage(ctx, image.Image)
+		if err != nil {
+			code := "[SERVICE] DeleteImagesForCoffeeShop - 2"
+			log.Errorw(code, err)
+			return err
+		}
+	}
+
+	err = u.ImageRepository.DeleteImagesForCoffeeShop(ctx, idImage, idCoffeeShop)
+	if err != nil {
+		code := "[SERVICE] DeleteImagesForCoffeeShop - 3"
+		log.Errorw(code, err)
+		return err
+	}
+
+	return nil
 }
 
 // DeleteImage implements [ImageService].
-func (u *imageService) DeleteImage(ctx context.Context, id int) error {
+func (u *imageService) DeleteImages(ctx context.Context, id int64) error {
 	results, err := u.ImageRepository.GetImageByIDCoffeeShop(ctx, id)
 	if err != nil {
 		code := "[SERVICE] DeleteCoffeeShop - 1"
@@ -64,6 +93,6 @@ func (u *imageService) UploadImages(ctx context.Context, req entity.ImageEntity)
 func NewImageService(imageRepo repository.ImageRepository, r2 cloudflare.CloudFlareR2Adapter) ImageService {
 	return &imageService{
 		ImageRepository: imageRepo,
-		R2:                    r2,
+		R2:              r2,
 	}
 }

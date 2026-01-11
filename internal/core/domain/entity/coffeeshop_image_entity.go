@@ -1,8 +1,8 @@
 package entity
 
 type ImageEntity struct {
-	ID int
-	CoffeeShopID int
+	ID int64
+	CoffeeShopID int64
 	Image string
 	IsPrimary bool
 }

@@ -9,11 +9,11 @@ import (
 )
 
 type CoffeeShopService interface {
-	CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int, error)
+	CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int64, error)
 	GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error)
-	GetCoffeeShopByID(ctx context.Context, id int) (*entity.CoffeeShopEntity, error)
+	GetCoffeeShopByID(ctx context.Context, id int64) (*entity.CoffeeShopEntity, error)
 	UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) error
-	DeleteCoffeeShop(ctx context.Context, id int) error
+	DeleteCoffeeShop(ctx context.Context, id int64) error
 }
 
 type coffeeShopService struct {
@@ -21,7 +21,7 @@ type coffeeShopService struct {
 }
 
 // CreateCoffeeShop implements [CoffeeShopService].
-func (c *coffeeShopService) CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int, error) {
+func (c *coffeeShopService) CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int64, error) {
 	id, err := c.CoffeeShopRepository.CreateCoffeeShop(ctx, req)
 	if err != nil {
 		code := "[SERVICE] CreateCoffeeShop - 3"
@@ -32,7 +32,7 @@ func (c *coffeeShopService) CreateCoffeeShop(ctx context.Context, req entity.Cof
 }
 
 // DeleteCoffeeShop implements [CoffeeShopService].
-func (c *coffeeShopService) DeleteCoffeeShop(ctx context.Context, id int) error {
+func (c *coffeeShopService) DeleteCoffeeShop(ctx context.Context, id int64) error {
 	err := c.CoffeeShopRepository.DeleteCoffeeShop(ctx, id)
 	if err != nil {
 		code := "[SERVICE] DeleteCoffeeShop - 1"
@@ -43,7 +43,7 @@ func (c *coffeeShopService) DeleteCoffeeShop(ctx context.Context, id int) error 
 }
 
 // GetCoffeeShopByID implements [CoffeeShopService].
-func (c *coffeeShopService) GetCoffeeShopByID(ctx context.Context, id int) (*entity.CoffeeShopEntity, error) {
+func (c *coffeeShopService) GetCoffeeShopByID(ctx context.Context, id int64) (*entity.CoffeeShopEntity, error) {
 	result, err := c.CoffeeShopRepository.GetCoffeeShopByID(ctx, id)
 	if err != nil {
 		code := "[SERVICE] GetCoffeeShops - 1"

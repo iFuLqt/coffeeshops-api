@@ -6,18 +6,89 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler/request"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/handler/response"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/service"
 	"github.com/ifulqt/coffeeshops-api/library/helper"
+	"github.com/ifulqt/coffeeshops-api/library/validat"
 )
 
 type ImageHandler interface {
 	UploadImages(c *fiber.Ctx) error
+	DeleteImagesForCoffeeShop(c *fiber.Ctx) error
 }
 
 type imageHandler struct {
 	ImageService service.ImageService
+}
+
+// DeleteImages implements [ImageHandler].
+func (u *imageHandler) DeleteImagesForCoffeeShop(c *fiber.Ctx) error {
+	var errResp response.DefaultErrorResponse
+	var resp response.DefaultSuccessResponse
+	var req request.ImageRequest
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	idParameter := c.Params("coffeeshopID")
+	idCoffeeShop, err := helper.StringToInt(idParameter)
+	if err != nil || idCoffeeShop <= 0 {
+		code := "[HANDLER] DeleteImagesForCoffeeShop - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Coffee shop id must be integer"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = c.BodyParser(&req)
+	if err != nil {
+		code := "[HANDLER] DeleteImagesForCoffeeShop - 2"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Invalid request body"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = validat.ValidateStruct(&req)
+	if err != nil {
+		code := "[HANDLER] DeleteImagesForCoffeeShop - 3"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Invalid request data"
+		val, ok := err.(validat.ValidationError)
+		if ok {
+			errResp.Meta.Errors = val.Message
+		} else {
+			errResp.Meta.Errors = nil
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = u.ImageService.DeleteImagesForCoffeeShop(c.Context(), req.Image, idCoffeeShop)
+	if err != nil {
+		code := "[HANDLER] DeleteImagesForCoffeeShop - 4"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Delete image coffee shop successfully"
+	resp.Meta.Errors = nil
+
+	return c.JSON(resp)
 }
 
 // UploadImages implements [UploadImageHandler].
@@ -81,7 +152,7 @@ func (u *imageHandler) UploadImages(c *fiber.Ctx) error {
 		}
 
 		reqEntity := entity.ImageEntity{
-			CoffeeShopID: int(coffeeShopID),
+			CoffeeShopID: coffeeShopID,
 			Image:        imageURL,
 			IsPrimary:    i == 0,
 		}

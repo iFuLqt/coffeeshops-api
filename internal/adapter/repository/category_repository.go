@@ -11,10 +11,10 @@ import (
 
 type CategoryRepository interface {
 	GetCategories(ctx context.Context) ([]entity.CategoryEntity, error)
-	GetCategoryByID(ctx context.Context, id int) (*entity.CategoryEntity, error)
+	GetCategoryByID(ctx context.Context, id int64) (*entity.CategoryEntity, error)
 	CreateCategory(ctx context.Context, req entity.CategoryEntity) error
 	UpdateCategory(ctx context.Context, req entity.CategoryEntity) error
-	DeleteCategory(ctx context.Context, id int) error
+	DeleteCategory(ctx context.Context, id int64) error
 }
 
 type categoryRepository struct {
@@ -38,7 +38,7 @@ func (c *categoryRepository) CreateCategory(ctx context.Context, req entity.Cate
 }
 
 // DeleteCategory implements [CategoryRepository].
-func (c *categoryRepository) DeleteCategory(ctx context.Context, id int) error {
+func (c *categoryRepository) DeleteCategory(ctx context.Context, id int64) error {
 	var modelCategory model.Category
 	err := c.db.Where("id = ?", id).Delete(&modelCategory).Error
 	if err != nil {
@@ -77,7 +77,7 @@ func (c *categoryRepository) GetCategories(ctx context.Context) ([]entity.Catego
 }
 
 // GetCategoryByID implements [CategoryRepository].
-func (c *categoryRepository) GetCategoryByID(ctx context.Context, id int) (*entity.CategoryEntity, error) {
+func (c *categoryRepository) GetCategoryByID(ctx context.Context, id int64) (*entity.CategoryEntity, error) {
 	var categoryModel model.Category
 	err := c.db.Where("id = ?", id).Preload("User").First(&categoryModel).Error
 	if err != nil {

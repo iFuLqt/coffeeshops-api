@@ -51,7 +51,7 @@ func (f *facilityHandler) DeleteFacility(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
-	err = f.FacilityService.DeleteFacility(c.Context(), int(idFacility))
+	err = f.FacilityService.DeleteFacility(c.Context(), int64(idFacility))
 	if err != nil {
 		code := "[HANDLER] DeleteFacility - 2"
 		log.Errorw(code, err)
@@ -166,7 +166,7 @@ func (f *facilityHandler) UpdateFacility(c *fiber.Ctx) error {
 		Code: req.Code,
 	}
 
-	err = f.FacilityService.UpdateFacility(c.Context(), reqEntity, int(idFacility))
+	err = f.FacilityService.UpdateFacility(c.Context(), reqEntity, int64(idFacility))
 	if err != nil {
 		code := "[HANDLER] UpdateFacility - 4"
 		log.Errorw(code, err)
@@ -308,7 +308,7 @@ func (f *facilityHandler) CreateFacilityCoffeeShop(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
-	err = f.FacilityService.CreateFacilityCoffeeShop(c.Context(), req.FacilityCode, int(CoffeeShopID))
+	err = f.FacilityService.CreateFacilityCoffeeShop(c.Context(), req.FacilityCode, int64(CoffeeShopID))
 	if err != nil {
 		code := "[HANDLER] CreateFacilituCoffeeShop - 1"
 		log.Errorw(code, err)

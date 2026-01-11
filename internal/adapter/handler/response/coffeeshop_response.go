@@ -3,7 +3,7 @@ package response
 import "time"
 
 type CoffeeShopByIDResponse struct {
-	ID        int                        `json:"id,omitempty"`
+	ID        int64                        `json:"id,omitempty"`
 	Name      string                     `json:"name,omitempty"`
 	Address   string                     `json:"address,omitempty"`
 	Maps      string                     `json:"maps,omitempty"`
@@ -18,7 +18,7 @@ type CoffeeShopByIDResponse struct {
 }
 
 type CoffeeShopsResponse struct {
-	ID        int                        `json:"id,omitempty"`
+	ID        int64                        `json:"id,omitempty"`
 	Name      string                     `json:"name,omitempty"`
 	Address   string                     `json:"address,omitempty"`
 	OpenClose string                     `json:"open_close,omitempty"`
@@ -27,7 +27,7 @@ type CoffeeShopsResponse struct {
 }
 
 type CreateCoffeeShopResponse struct {
-	ID int `json:"id"`
+	ID int64 `json:"id"`
 }
 
 
