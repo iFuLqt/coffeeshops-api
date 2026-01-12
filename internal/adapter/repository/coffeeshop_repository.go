@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/model"
 	"gorm.io/gorm"
@@ -50,12 +51,19 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 // DeleteCoffeeShop implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) DeleteCoffeeShop(ctx context.Context, id int64) error {
 	var modelCoffee model.CoffeeShop
-	err := c.db.WithContext(ctx).Where("id = ?", id).Delete(&modelCoffee).Error
-	if err != nil {
+	result := c.db.WithContext(ctx).Where("id = ?", id).Delete(&modelCoffee)
+	if result.Error != nil {
 		code := "[REPOSITORY] DeleteCoffeeShop - 1"
-		log.Errorw(code, err)
-		return err
+		log.Errorw(code, result.Error)
+		return result.Error
 	}
+
+	if result.RowsAffected == 0 {
+		code := "[REPOSITORY] DeleteCoffeeShop - 2"
+		log.Errorw(code, domerror.ErrDataNotFound)
+		return domerror.ErrDataNotFound
+	}
+	
 	return nil
 }
 

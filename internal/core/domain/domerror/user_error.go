@@ -11,4 +11,5 @@ var (
 	ErrCategorySlugExists = errors.New("category slug already exists")
 	ErrParsingTime        = errors.New("parsing time invalid")
 	ErrDuplicate          = errors.New("data duplicate")
+	ErrDeleteCategory     = errors.New("category cannot delete")
 )

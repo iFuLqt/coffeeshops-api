@@ -27,11 +27,17 @@ type facilityRepository struct {
 // DeleteFacility implements [FacilityRepository].
 func (f *facilityRepository) DeleteFacility(ctx context.Context, id int64) error {
 	var modelFacility model.Facility
-	err := f.db.WithContext(ctx).Where("id = ?", id).Delete(&modelFacility).Error
-	if err != nil {
+	result := f.db.WithContext(ctx).Where("id = ?", id).Delete(&modelFacility)
+	if result.Error != nil {
 		code := "[REPOSITORY] DeleteFacility - 1"
-		log.Errorw(code, err)
-		return err
+		log.Errorw(code, result.Error)
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		code := "[REPOSITORY] DeleteFacility - 2"
+		log.Errorw(code, domerror.ErrDataNotFound)
+		return domerror.ErrDataNotFound
 	}
 	return nil
 }

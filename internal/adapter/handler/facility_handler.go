@@ -56,8 +56,12 @@ func (f *facilityHandler) DeleteFacility(c *fiber.Ctx) error {
 		code := "[HANDLER] DeleteFacility - 2"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
-		errResp.Meta.Message = "Internal server error"
 		errResp.Meta.Errors = nil
+		if errors.Is(err, domerror.ErrDataNotFound) {
+			errResp.Meta.Message = "Facility not found"
+			return c.Status(fiber.StatusNotFound).JSON(errResp)
+		}
+		errResp.Meta.Message = "Internal server error"
 		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
 	}
 

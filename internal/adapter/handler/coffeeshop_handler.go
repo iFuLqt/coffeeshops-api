@@ -153,8 +153,12 @@ func (f *coffeeShopHandler) DeleteCoffeeShop(c *fiber.Ctx) error {
 		code := "[HANDLER] DeleteCoffeeShop - 3"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
-		errResp.Meta.Message = "Internal server error"
 		errResp.Meta.Errors = nil
+		if errors.Is(err, domerror.ErrDataNotFound) {
+			errResp.Meta.Message = "Coffee shop not found"
+			return c.Status(fiber.StatusNotFound).JSON(errResp)
+		}
+		errResp.Meta.Message = "Internal server error"
 		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
 	}
 

@@ -94,7 +94,7 @@ func (f *categoryHandler) CreateCategory(c *fiber.Ctx) error {
 // DeleteCategory implements [CategoryHandler].
 func (f *categoryHandler) DeleteCategory(c *fiber.Ctx) error {
 	var resp response.DefaultSuccessResponse
-	var errResp response.DefaultSuccessResponse
+	var errResp response.DefaultErrorResponse
 
 	claims := c.Locals("user").(*entity.JwtData)
 	userID := claims.UserID
@@ -121,12 +121,19 @@ func (f *categoryHandler) DeleteCategory(c *fiber.Ctx) error {
 		code := "[HANDLER] DeleteCategory - 2"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
-		errResp.Meta.Message = "Internal server error"
 		errResp.Meta.Errors = nil
+		if errors.Is(err, domerror.ErrDeleteCategory) {
+			errResp.Meta.Message = "Category is still used by coffee shops"
+			return c.Status(fiber.StatusBadRequest).JSON(errResp)
+		} else if errors.Is(err, domerror.ErrDataNotFound) {
+			errResp.Meta.Message = "Category not found"
+			return c.Status(fiber.StatusNotFound).JSON(errResp)
+		}
+		errResp.Meta.Message = "Internal server error"
 		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
 	}
 
-	resp.Meta.Status = false
+	resp.Meta.Status = true
 	resp.Meta.Message = "Delete category successfully"
 	resp.Meta.Errors = nil
 
@@ -160,11 +167,11 @@ func (f *categoryHandler) GetCategories(c *fiber.Ctx) error {
 	categoryResps := []response.CategoryResponse{}
 	for _, val := range results {
 		categoryResp := response.CategoryResponse{
-			ID:            val.ID,
-			Category:      val.Name,
-			Slug:          val.Slug,
+			ID:       val.ID,
+			Category: val.Name,
+			Slug:     val.Slug,
 			CreatedBy: response.UserResponse{
-				ID: val.CreatedBy.ID,
+				ID:   val.CreatedBy.ID,
 				Name: val.CreatedBy.Name,
 			},
 		}
@@ -215,11 +222,11 @@ func (f *categoryHandler) GetCategoryByID(c *fiber.Ctx) error {
 	}
 
 	categoryResp := response.CategoryResponse{
-		ID:            result.ID,
-		Category:      result.Name,
-		Slug:          result.Slug,
+		ID:       result.ID,
+		Category: result.Name,
+		Slug:     result.Slug,
 		CreatedBy: response.UserResponse{
-			ID: result.CreatedBy.ID,
+			ID:   result.CreatedBy.ID,
 			Name: result.CreatedBy.Name,
 		},
 	}
@@ -258,7 +265,6 @@ func (f *categoryHandler) UpdateCategory(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
-
 	err = c.BodyParser(&req)
 	if err != nil {
 		code := "[HANDLER] UpdateCategory - 2"
@@ -285,7 +291,7 @@ func (f *categoryHandler) UpdateCategory(c *fiber.Ctx) error {
 	}
 
 	reqEntity := entity.CategoryEntity{
-		ID: int64(id),
+		ID:   int64(id),
 		Name: req.Category,
 	}
 

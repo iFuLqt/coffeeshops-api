@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
@@ -41,9 +42,35 @@ func (c *categoryRepository) CreateCategory(ctx context.Context, req entity.Cate
 // DeleteCategory implements [CategoryRepository].
 func (c *categoryRepository) DeleteCategory(ctx context.Context, id int64) error {
 	var modelCategory model.Category
-	err := c.db.WithContext(ctx).Where("id = ?", id).Delete(&modelCategory).Error
+	err := c.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Where("id = ?", id).Preload("CoffeeShops").First(&modelCategory)
+		if result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				code := "[REPOSITORY] DeleteCategory - 1"
+				log.Errorw(code, domerror.ErrDataNotFound)
+				return domerror.ErrDataNotFound
+			}
+			code := "[REPOSITORY] DeleteCategory - 2"
+			log.Errorw(code, result.Error)
+			return result.Error
+		}
+
+		if len(modelCategory.CoffeeShops) > 0 {
+			code := "[REPOSITORY] DeleteCategory - 3"
+			log.Errorw(code, domerror.ErrDeleteCategory)
+			return domerror.ErrDeleteCategory
+		}
+
+		result = tx.Where("id = ?", id).Delete(&modelCategory)
+		if result.Error != nil {
+			code := "[REPOSITORY] DeleteCategory - 4"
+			log.Errorw(code, result.Error)
+			return result.Error
+		}
+		return nil
+	})
 	if err != nil {
-		code := "[REPOSITORY] DeleteCategory - 2"
+		code := "[REPOSITORY] DeleteCategory - 5"
 		log.Errorw(code, err)
 		return err
 	}
