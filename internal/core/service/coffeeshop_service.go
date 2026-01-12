@@ -13,7 +13,7 @@ type CoffeeShopService interface {
 	CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int64, error)
 	GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error)
 	GetCoffeeShopByID(ctx context.Context, id int64) (*entity.CoffeeShopEntity, error)
-	UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) error
+	UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity, idCoffeeShop int64) error
 	DeleteCoffeeShop(ctx context.Context, id int64) error
 }
 
@@ -69,8 +69,17 @@ func (c *coffeeShopService) GetCoffeeShops(ctx context.Context) ([]entity.Coffee
 }
 
 // UpdateCoffeeShop implements [CoffeeShopService].
-func (c *coffeeShopService) UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) error {
-	panic("unimplemented")
+func (c *coffeeShopService) UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity, idCoffeeShop int64) error {
+	slug := helper.GenerateSlug(req.Name)
+	req.Slug = slug
+
+	err := c.CoffeeShopRepository.UpdateCoffeeShop(ctx, req, idCoffeeShop)
+	if err != nil {
+		code := "[SERVICE] UpdateCoffeeShop - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 func NewCoffeeShopService(coffeeShopRepo repository.CoffeeShopRepository) CoffeeShopService {

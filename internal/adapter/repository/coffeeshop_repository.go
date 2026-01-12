@@ -14,7 +14,7 @@ type CoffeeShopRepository interface {
 	CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int64, error)
 	GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error)
 	GetCoffeeShopByID(ctx context.Context, id int64) (*entity.CoffeeShopEntity, error)
-	UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) error
+	UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity, idCoffeeShop int64) error
 	DeleteCoffeeShop(ctx context.Context, id int64) error
 }
 
@@ -167,8 +167,32 @@ func (c *coffeeShopRepository) GetCoffeeShops(ctx context.Context) ([]entity.Cof
 }
 
 // UpdateCoffeeShop implements [CoffeeShopRepository].
-func (c *coffeeShopRepository) UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) error {
-	panic("unimplemented")
+func (c *coffeeShopRepository) UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity, idCoffeeShop int64) error {
+	modelCoffee := model.CoffeeShop{
+		Name: req.Name,
+		Slug: req.Slug,
+		Address: req.Address,
+		Latitude: req.Latitude,
+		Longitude: req.Longitude,
+		OpenTime: req.OpenTime,
+		CloseTime: req.CloseTime,
+		Instagram: req.Instagram,
+		UpdatedByID: req.UserUpdate.ID,
+		CategoryID: req.Category.ID,
+		IsActive: req.IsActive,
+	}
+	result := c.db.Where("id = ?", idCoffeeShop).Updates(modelCoffee)
+	if result.Error != nil {
+		code := "[REPOSITORY] UpdateCoffeeShop - 1"
+		log.Errorw(code, result.Error)
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		code := "[REPOSITORY] UpdateCoffeeShop - 2"
+		log.Errorw(code, domerror.ErrDataNotFound)
+		return domerror.ErrDataNotFound
+	}
+	return nil
 }
 
 func NewCoffeeShopRepository(db *gorm.DB) CoffeeShopRepository {

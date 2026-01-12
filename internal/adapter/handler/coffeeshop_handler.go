@@ -301,7 +301,91 @@ func (f *coffeeShopHandler) GetCoffeeShops(c *fiber.Ctx) error {
 
 // UpdateCoffeeShop implements [CoffeeShopHandler].
 func (f *coffeeShopHandler) UpdateCoffeeShop(c *fiber.Ctx) error {
-	panic("unimplemented")
+	var resp response.DefaultSuccessResponse
+	var errResp response.DefaultErrorResponse
+	var req request.UpdateCoffeeShopRequest
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	idParameter := c.Params("coffeeshopID")
+	idCoffeeShop, err := helper.StringToInt(idParameter)
+	if err != nil || idCoffeeShop <= 0 {
+		code := "[HANDLER] UpdateCoffeeShop - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Coffee shop ID must be integer"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = c.BodyParser(&req)
+	if err != nil {
+		code := "[HANDLER] UpdateCoffeeShop - 2"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Invalid request body"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = validat.ValidateStruct(&req)
+	if err != nil {
+		code := "[HANDLER] UpdateCoffeeShop - 3"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Invalid request data"
+		val, ok := err.(validat.ValidationError)
+		if ok {
+			errResp.Meta.Errors = val.Message
+		} else {
+			errResp.Meta.Errors = nil
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	reqEntity := entity.CoffeeShopEntity{
+		Name: req.CoffeeShop,
+		Address: req.Address,
+		Latitude: req.Latitude,
+		Longitude: req.Longitude,
+		OpenTime: req.OpenTime,
+		CloseTime: req.CloseTime,
+		Instagram: req.Instagram,
+		UserUpdate: entity.UserEntity{
+			ID: int64(userID),
+		},
+		IsActive: *req.IsActive,
+		Category: entity.CategoryEntity{
+			ID: req.CategoryID,
+		},
+	}
+
+	err = f.CoffeeShopService.UpdateCoffeeShop(c.Context(), reqEntity, idCoffeeShop)
+	if err != nil {
+		code := "[HANDLER] UpdateCoffeeShop - 4"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Errors = nil
+		if errors.Is(err, domerror.ErrDataNotFound) {
+			errResp.Meta.Message = "Coffee shop not found"
+			return c.Status(fiber.StatusNotFound).JSON(errResp)
+		}
+		errResp.Meta.Message = "Internal server error"
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Update coffee shops successfully"
+	resp.Meta.Errors = nil
+
+	return c.JSON(resp)
 }
 
 func NewCoffeeShopHandler(coffeeShopServ service.CoffeeShopService, imageService service.ImageService) CoffeeShopHandler {

@@ -87,6 +87,7 @@ func RunServer() {
 	coffeShop.Post("/", coffeeShopHandler.CreateCoffeeShop)
 	coffeShop.Get("/", coffeeShopHandler.GetCoffeeShops)
 	coffeShop.Get("/:coffeeshopID", coffeeShopHandler.GetCoffeeShopByID)
+	coffeShop.Put("/:coffeeshopID", coffeeShopHandler.UpdateCoffeeShop)
 	coffeShop.Delete("/:coffeeshopID", coffeeShopHandler.DeleteCoffeeShop)
 	coffeShop.Post("/:coffeeshopID/images", imageHandler.UploadImages)
 	coffeShop.Delete("/:coffeeshopID/images", imageHandler.DeleteImagesForCoffeeShop)
