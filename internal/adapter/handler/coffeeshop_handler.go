@@ -220,6 +220,7 @@ func (f *coffeeShopHandler) GetCoffeeShopByID(c *fiber.Ctx) error {
 	respData := response.CoffeeShopByIDResponse{
 		ID:        result.ID,
 		Name:      result.Name,
+		Slug:      result.Slug,
 		Address:   result.Address,
 		OpenClose: helper.GenerateOpenTime(result.OpenTime, result.CloseTime),
 		Facility:  facilities,
@@ -281,6 +282,7 @@ func (f *coffeeShopHandler) GetCoffeeShops(c *fiber.Ctx) error {
 		respData := response.CoffeeShopsResponse{
 			ID:        res.ID,
 			Name:      res.Name,
+			Slug:      res.Slug,
 			Address:   res.Address,
 			OpenClose: helper.GenerateOpenTime(res.OpenTime, res.CloseTime),
 			Category:  res.Category.Name,

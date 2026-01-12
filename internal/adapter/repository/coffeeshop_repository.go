@@ -27,6 +27,7 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 	modelCoffe := model.CoffeeShop{
 		Name:        req.Name,
 		Address:     req.Address,
+		Slug: req.Slug,
 		Latitude:    req.Latitude,
 		Longitude:   req.Longitude,
 		OpenTime:    req.OpenTime,
@@ -63,7 +64,7 @@ func (c *coffeeShopRepository) DeleteCoffeeShop(ctx context.Context, id int64) e
 		log.Errorw(code, domerror.ErrDataNotFound)
 		return domerror.ErrDataNotFound
 	}
-	
+
 	return nil
 }
 
@@ -98,6 +99,7 @@ func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int64) 
 	coffeeEnt := entity.CoffeeShopEntity{
 		ID:        modelCoffe.ID,
 		Name:      modelCoffe.Name,
+		Slug: modelCoffe.Slug,
 		Address:   modelCoffe.Address,
 		Latitude:  modelCoffe.Latitude,
 		Longitude: modelCoffe.Longitude,
@@ -148,6 +150,7 @@ func (c *coffeeShopRepository) GetCoffeeShops(ctx context.Context) ([]entity.Cof
 		coffeeEnt := entity.CoffeeShopEntity{
 			ID:        val.ID,
 			Name:      val.Name,
+			Slug: val.Slug,
 			Address:   val.Address,
 			OpenTime:  val.OpenTime,
 			CloseTime: val.CloseTime,

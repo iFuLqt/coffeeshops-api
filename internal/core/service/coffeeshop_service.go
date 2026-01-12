@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/adapter/repository"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
+	"github.com/ifulqt/coffeeshops-api/library/helper"
 )
 
 type CoffeeShopService interface {
@@ -22,6 +23,9 @@ type coffeeShopService struct {
 
 // CreateCoffeeShop implements [CoffeeShopService].
 func (c *coffeeShopService) CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int64, error) {
+	slug := helper.GenerateSlug(req.Name)
+	req.Slug = slug
+
 	id, err := c.CoffeeShopRepository.CreateCoffeeShop(ctx, req)
 	if err != nil {
 		code := "[SERVICE] CreateCoffeeShop - 3"

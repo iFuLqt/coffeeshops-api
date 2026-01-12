@@ -3,23 +3,25 @@ package response
 import "time"
 
 type CoffeeShopByIDResponse struct {
-	ID        int64                        `json:"id,omitempty"`
+	ID        int64                      `json:"id,omitempty"`
 	Name      string                     `json:"name,omitempty"`
+	Slug      string                     `json:"slug,omitempty"`
 	Address   string                     `json:"address,omitempty"`
 	Maps      string                     `json:"maps,omitempty"`
 	Instagram string                     `json:"instagram,omitempty"`
 	OpenClose string                     `json:"open_close,omitempty"`
 	Category  string                     `json:"category,omitempty"`
-	Facility  []FacilityResponse `json:"facility,omitempty"`
-	CreatedBy *UserResponse               `json:"created_by,omitempty"`
-	UpdatedBy *UserResponse               `json:"updated_by,omitempty"`
+	Facility  []FacilityResponse         `json:"facility,omitempty"`
+	CreatedBy *UserResponse              `json:"created_by,omitempty"`
+	UpdatedBy *UserResponse              `json:"updated_by,omitempty"`
 	UpdatedAt time.Time                  `json:"last_update,omitempty"`
 	Images    []ImagesCoffeeShopResponse `json:"images"`
 }
 
 type CoffeeShopsResponse struct {
-	ID        int64                        `json:"id,omitempty"`
+	ID        int64                      `json:"id,omitempty"`
 	Name      string                     `json:"name,omitempty"`
+	Slug      string                     `json:"slug,omitempty"`
 	Address   string                     `json:"address,omitempty"`
 	OpenClose string                     `json:"open_close,omitempty"`
 	Category  string                     `json:"category,omitempty"`
@@ -29,5 +31,3 @@ type CoffeeShopsResponse struct {
 type CreateCoffeeShopResponse struct {
 	ID int64 `json:"id"`
 }
-
-
