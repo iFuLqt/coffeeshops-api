@@ -12,9 +12,7 @@ import (
 )
 
 type FacilityRepository interface {
-	CreateFacilityCoffeeShop(ctx context.Context, idFacility, idCoffeShop int64) error
 	UpdateFacilityCoffeeShop(ctx context.Context, req []string, idCoffeeShop int64) error
-	CodeForCreateFCS(ctx context.Context, code string) (int64, error)
 	CreateFacility(ctx context.Context, req entity.FacilityEntity) error
 	UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int64) error
 	DeleteFacility(ctx context.Context, id int64) error
@@ -103,7 +101,7 @@ func (f *facilityRepository) UpdateFacilityCoffeeShop(ctx context.Context, req [
 			})
 		}
 		if len(inserts) > 0 {
-			err := tx.Create(&inserts).Error 
+			err := tx.Create(&inserts).Error
 			if err != nil {
 				code := "[REPOSITORY] UpdateFacilityCoffeeShop - 4"
 				log.Errorw(code, err)
@@ -199,33 +197,6 @@ func (f *facilityRepository) CreateFacility(ctx context.Context, req entity.Faci
 			return domerror.ErrDuplicate
 		}
 		code := "[REPOSITORY] CreateFacility - 2"
-		log.Errorw(code, err)
-		return err
-	}
-	return nil
-}
-
-// CodeForCreateFCS implements [FacilityRepository].
-func (f *facilityRepository) CodeForCreateFCS(ctx context.Context, code string) (int64, error) {
-	var modelFacility model.Facility
-	err := f.db.WithContext(ctx).Where("code = ?", code).Find(&modelFacility).Error
-	if err != nil {
-		code := "[REPOSITORY] CodeForCreateFCS - 1"
-		log.Errorw(code, err)
-		return 0, err
-	}
-	return modelFacility.ID, nil
-}
-
-// CreateFacilityCoffeeShopRelation implements [FacilityRepository].
-func (f *facilityRepository) CreateFacilityCoffeeShop(ctx context.Context, idFacility, idCoffeShop int64) error {
-	modelCSFacility := model.CoffeeShopFacility{
-		CoffeeShopID: idCoffeShop,
-		FacilityID:   idFacility,
-	}
-	err := f.db.WithContext(ctx).Create(&modelCSFacility).Error
-	if err != nil {
-		code := "[REPOSITORY] CreateFacilityCoffeeShop - 1"
 		log.Errorw(code, err)
 		return err
 	}

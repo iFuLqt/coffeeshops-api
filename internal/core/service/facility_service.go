@@ -10,7 +10,6 @@ import (
 
 type FacilityService interface {
 	UpdateFacilityCoffeeShop(ctx context.Context, req []string, idCoffeeShop int64) error
-	CreateFacilityCoffeeShop(ctx context.Context, req []string, id int64) error
 	CreateFacility(ctx context.Context, req entity.FacilityEntity) error
 	UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int64) error
 	DeleteFacility(ctx context.Context, id int64) error
@@ -74,25 +73,6 @@ func (f *facilityService) CreateFacility(ctx context.Context, req entity.Facilit
 		return err
 	}
 	return err
-}
-
-// CreateFacilityCoffeeShop implements [FacilityService].
-func (f *facilityService) CreateFacilityCoffeeShop(ctx context.Context, facilityCodes []string, idCoffeeShop int64) error {
-	for _, code := range facilityCodes {
-		idFacility, err := f.FacilityRepository.CodeForCreateFCS(ctx, code)
-		if err != nil {
-			code := "[SERVICE] CreateFacilityCoffeeShop - 1"
-			log.Errorw(code, err)
-			return err
-		}
-		err = f.FacilityRepository.CreateFacilityCoffeeShop(ctx, idFacility, idCoffeeShop)
-		if err != nil {
-			code := "[SERVICE] CreateFacilityCoffeeShop - 2"
-			log.Errorw(code, err)
-			return err
-		}
-	}
-	return nil
 }
 
 func NewFacilityService(facilityRepo repository.FacilityRepository) FacilityService {
