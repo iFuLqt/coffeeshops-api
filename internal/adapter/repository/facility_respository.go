@@ -13,6 +13,7 @@ import (
 
 type FacilityRepository interface {
 	CreateFacilityCoffeeShop(ctx context.Context, idFacility, idCoffeShop int64) error
+	UpdateFacilityCoffeeShop(ctx context.Context, req []string, idCoffeeShop int64) error
 	CodeForCreateFCS(ctx context.Context, code string) (int64, error)
 	CreateFacility(ctx context.Context, req entity.FacilityEntity) error
 	UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int64) error
@@ -22,6 +23,102 @@ type FacilityRepository interface {
 
 type facilityRepository struct {
 	db *gorm.DB
+}
+
+// UpdateFacilityCoffeeShop implements [FacilityRepository].
+func (f *facilityRepository) UpdateFacilityCoffeeShop(ctx context.Context, req []string, idCoffeeShop int64) error {
+	err := f.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// =====================================================
+		// 1. Ambil facility LAMA (facility_id + code)
+		// =====================================================
+		type oldFacility struct {
+			FacilityID int64
+			Code       string
+		}
+		var oldFacilities []oldFacility
+		err := tx.Table("coffee_shop_facility csf").Select("csf.facility_id, f.code").Joins("JOIN facilities f ON f.id = csf.facility_id").
+			Where("csf.coffee_shop_id = ?", idCoffeeShop).
+			Scan(&oldFacilities).Error
+		if err != nil {
+			code := "[REPOSITORY] UpdateFacilityCoffeeShop - 1"
+			log.Errorw(code, err)
+			return err
+		}
+		// =====================================================
+		// 2. Map OLD (code -> id)
+		// =====================================================
+		oldMap := make(map[string]int64)
+		for _, f := range oldFacilities {
+			oldMap[f.Code] = f.FacilityID
+		}
+		// =====================================================
+		// 3. Map NEW (code)
+		// =====================================================
+		newMap := make(map[string]struct{})
+		for _, code := range req {
+			newMap[code] = struct{}{}
+		}
+		// =====================================================
+		// 4. DELETE: old - new
+		// =====================================================
+		var deleteIDs []int64
+		for code, facilityID := range oldMap {
+			if _, exists := newMap[code]; !exists {
+				deleteIDs = append(deleteIDs, facilityID)
+			}
+		}
+		if len(deleteIDs) > 0 {
+			err := tx.Where("coffee_shop_id = ? AND facility_id IN ?", idCoffeeShop, deleteIDs).
+				Delete(&model.CoffeeShopFacility{}).Error
+			if err != nil {
+				code := "[REPOSITORY] UpdateFacilityCoffeeShop - 2"
+				log.Errorw(code, err)
+				return err
+			}
+		}
+		// =====================================================
+		// 5. INSERT: new - old
+		// =====================================================
+		var insertCodes []string
+		for code := range newMap {
+			if _, exists := oldMap[code]; !exists {
+				insertCodes = append(insertCodes, code)
+			}
+		}
+		if len(insertCodes) == 0 {
+			return nil
+		}
+		var facilities []model.Facility
+		err = tx.Where("code IN ?", insertCodes).Find(&facilities).Error
+		if err != nil {
+			code := "[REPOSITORY] UpdateFacilityCoffeeShop - 3"
+			log.Errorw(code, err)
+			return err
+		}
+		var inserts []model.CoffeeShopFacility
+		for _, fac := range facilities {
+			inserts = append(inserts, model.CoffeeShopFacility{
+				CoffeeShopID: idCoffeeShop,
+				FacilityID:   fac.ID,
+			})
+		}
+		if len(inserts) > 0 {
+			err := tx.Create(&inserts).Error 
+			if err != nil {
+				code := "[REPOSITORY] UpdateFacilityCoffeeShop - 4"
+				log.Errorw(code, err)
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		code := "[REPOSITORY] UpdateFacilityCoffeeShop - 5"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 // DeleteFacility implements [FacilityRepository].

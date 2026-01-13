@@ -18,7 +18,7 @@ type CoffeeShop struct {
 	UserUpdate         User                 `gorm:"foreignKey:UpdatedByID"`
 	CreatedAt          time.Time            `gorm:"created_at"`
 	UpdatedAt          time.Time            `gorm:"updated_at"`
-	IsActive           bool                 `gorm:"is_active"`
+	IsActive           *bool                 `gorm:"is_active"`
 	CategoryID         int64                `gorm:"category_id"`
 	Category           Category             `gorm:"foreignKey:CategoryID"`
 	Images             []CoffeeShopImage    `gorm:"foreignKey:CoffeeShopID"`

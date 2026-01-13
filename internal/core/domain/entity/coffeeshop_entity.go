@@ -17,6 +17,6 @@ type CoffeeShopEntity struct {
 	Category   CategoryEntity
 	Image      []ImageEntity
 	Facility   []FacilityEntity
-	IsActive   bool
+	IsActive   *bool
 	UpdatedAt  time.Time
 }

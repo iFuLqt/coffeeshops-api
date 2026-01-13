@@ -67,6 +67,7 @@ func (f *coffeeShopHandler) CreateCoffeeShop(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errResp)
 	}
 
+	active := true
 	reqEntity := entity.CoffeeShopEntity{
 		Name:      req.CoffeeShop,
 		Address:   req.Address,
@@ -84,7 +85,7 @@ func (f *coffeeShopHandler) CreateCoffeeShop(c *fiber.Ctx) error {
 		Category: entity.CategoryEntity{
 			ID: req.CategoryID,
 		},
-		IsActive: true,
+		IsActive: &active,
 	}
 
 	id, err := f.CoffeeShopService.CreateCoffeeShop(c.Context(), reqEntity)
@@ -361,7 +362,7 @@ func (f *coffeeShopHandler) UpdateCoffeeShop(c *fiber.Ctx) error {
 		UserUpdate: entity.UserEntity{
 			ID: int64(userID),
 		},
-		IsActive: *req.IsActive,
+		IsActive: req.IsActive,
 		Category: entity.CategoryEntity{
 			ID: req.CategoryID,
 		},

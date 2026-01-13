@@ -16,6 +16,7 @@ import (
 
 type FacilityHandler interface {
 	CreateFacilityCoffeeShop(c *fiber.Ctx) error
+	UpdateFacilityCoffeeShop(c *fiber.Ctx) error
 	CreateFacility(c *fiber.Ctx) error
 	UpdateFacility(c *fiber.Ctx) error
 	DeleteFacility(c *fiber.Ctx) error
@@ -24,6 +25,74 @@ type FacilityHandler interface {
 
 type facilityHandler struct {
 	FacilityService service.FacilityService
+}
+
+// UpdateFacilityCoffeeShop implements [FacilityHandler].
+func (f *facilityHandler) UpdateFacilityCoffeeShop(c *fiber.Ctx) error {
+	var resp response.DefaultSuccessResponse
+	var errResp response.DefaultErrorResponse
+	var req request.FacilityCoffeeShopRequest
+
+	claims := c.Locals("user").(*entity.JwtData)
+	userID := claims.UserID
+	if userID == 0 {
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Unauthorized access"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
+	}
+
+	idParameter := c.Params("coffeeshopID")
+	idCoffeeShop, err := helper.StringToInt(idParameter)
+	if err != nil || idCoffeeShop <= 0 {
+		code := "[HANDLER] UpdateFacilityCoffeeShop - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Coffee shop ID must be integer"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = c.BodyParser(&req)
+	if err != nil {
+		code := "[HANDLER] UpdateFacilityCoffeeShop - 2"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Invalid request body"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = validat.ValidateStruct(&req)
+	if err != nil {
+		code := "[HANDLER] UpdateFacilityCoffeeShop - 3"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Invalid request data"
+		val, ok := err.(validat.ValidationError)
+		if ok {
+			errResp.Meta.Errors = val.Message
+		} else {
+			errResp.Meta.Errors = nil
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	err = f.FacilityService.UpdateFacilityCoffeeShop(c.Context(), req.FacilityCode, idCoffeeShop)
+	if err != nil {
+		code := "[HANDLER] UpdateFacilityCoffeeShop - 4"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Update facility successfully"
+	resp.Meta.Errors = nil
+
+	return c.JSON(resp)
 }
 
 // DeleteFacility implements [FacilityHandler].

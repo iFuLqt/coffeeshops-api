@@ -11,7 +11,7 @@ type CoffeeShopByIDResponse struct {
 	Instagram string                     `json:"instagram,omitempty"`
 	OpenClose string                     `json:"open_close,omitempty"`
 	Category  string                     `json:"category,omitempty"`
-	Facility  []FacilityResponse         `json:"facility,omitempty"`
+	Facility  []FacilityResponse         `json:"facility"`
 	CreatedBy *UserResponse              `json:"created_by,omitempty"`
 	UpdatedBy *UserResponse              `json:"updated_by,omitempty"`
 	UpdatedAt time.Time                  `json:"last_update,omitempty"`

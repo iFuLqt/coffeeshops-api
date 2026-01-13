@@ -9,6 +9,7 @@ import (
 )
 
 type FacilityService interface {
+	UpdateFacilityCoffeeShop(ctx context.Context, req []string, idCoffeeShop int64) error
 	CreateFacilityCoffeeShop(ctx context.Context, req []string, id int64) error
 	CreateFacility(ctx context.Context, req entity.FacilityEntity) error
 	UpdateFacility(ctx context.Context, req entity.FacilityEntity, id int64) error
@@ -18,6 +19,17 @@ type FacilityService interface {
 
 type facilityService struct {
 	FacilityRepository repository.FacilityRepository
+}
+
+// UpdateFacilityCoffeeShop implements [FacilityService].
+func (f *facilityService) UpdateFacilityCoffeeShop(ctx context.Context, req []string, idCoffeeShop int64) error {
+	err := f.FacilityRepository.UpdateFacilityCoffeeShop(ctx, req, idCoffeeShop)
+	if err != nil {
+		code := "[REPOSITORY] UpdateFacilityCoffeeShop - 1"
+		log.Errorw(code, err)
+		return err
+	}
+	return nil
 }
 
 // DeleteFacility implements [FacilityService].
