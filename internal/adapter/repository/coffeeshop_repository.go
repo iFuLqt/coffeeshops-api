@@ -2,17 +2,20 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"math"
 
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/domerror"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/entity"
 	"github.com/ifulqt/coffeeshops-api/internal/core/domain/model"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type CoffeeShopRepository interface {
 	CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int64, error)
-	GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error)
+	GetCoffeeShops(ctx context.Context, query entity.QueryString) ([]entity.CoffeeShopEntity, int64, int64, error)
 	GetCoffeeShopByID(ctx context.Context, id int64) (*entity.CoffeeShopEntity, error)
 	UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity, idCoffeeShop int64) error
 	DeleteCoffeeShop(ctx context.Context, id int64) error
@@ -27,7 +30,7 @@ func (c *coffeeShopRepository) CreateCoffeeShop(ctx context.Context, req entity.
 	modelCoffe := model.CoffeeShop{
 		Name:        req.Name,
 		Address:     req.Address,
-		Slug: req.Slug,
+		Slug:        req.Slug,
 		Latitude:    req.Latitude,
 		Longitude:   req.Longitude,
 		OpenTime:    req.OpenTime,
@@ -99,7 +102,7 @@ func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int64) 
 	coffeeEnt := entity.CoffeeShopEntity{
 		ID:        modelCoffe.ID,
 		Name:      modelCoffe.Name,
-		Slug: modelCoffe.Slug,
+		Slug:      modelCoffe.Slug,
 		Address:   modelCoffe.Address,
 		Latitude:  modelCoffe.Latitude,
 		Longitude: modelCoffe.Longitude,
@@ -125,14 +128,36 @@ func (c *coffeeShopRepository) GetCoffeeShopByID(ctx context.Context, id int64) 
 }
 
 // GetCoffeeShops implements [CoffeeShopRepository].
-func (c *coffeeShopRepository) GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error) {
+func (c *coffeeShopRepository) GetCoffeeShops(ctx context.Context, query entity.QueryString) ([]entity.CoffeeShopEntity, int64, int64, error) {
 	var modelCoffe []model.CoffeeShop
-	err := c.db.WithContext(ctx).Preload("Category").Preload("Images").Find(&modelCoffe).Error
+	var countData int64
+
+	order := fmt.Sprintf("%s %s", query.OrderBy, query.OrderType)
+	offset := (query.Page - 1) * query.Limit
+
+	sqlMain := c.db.WithContext(ctx).Preload(clause.Associations).Where("name ILIKE ? OR address ILIKE ?",
+		"%"+query.Search+"%", "%"+query.Search+"%").Where("is_active = ?", query.Status)
+
+	if query.CategoryID > 0 {
+		sqlMain = sqlMain.Where("category_id = ?", query.CategoryID)
+	}
+
+	err := sqlMain.Model(&modelCoffe).Count(&countData).Error
 	if err != nil {
 		code := "[REPOSITORY] GetCoffeeShops - 1"
 		log.Errorw(code, err)
-		return nil, err
+		return nil, 0, 0, err
 	}
+
+	totalPages := int(math.Ceil(float64(countData) / float64(query.Limit)))
+
+	err = sqlMain.Order(order).Limit(int(query.Limit)).Offset(int(offset)).Find(&modelCoffe).Error
+	if err != nil {
+		code := "[REPOSITORY] GetCoffeeShops - 2"
+		log.Errorw(code, err)
+		return nil, 0, 0, err
+	}
+
 	coffeeEntity := []entity.CoffeeShopEntity{}
 	for _, val := range modelCoffe {
 		imageSlics := []entity.ImageEntity{}
@@ -150,7 +175,7 @@ func (c *coffeeShopRepository) GetCoffeeShops(ctx context.Context) ([]entity.Cof
 		coffeeEnt := entity.CoffeeShopEntity{
 			ID:        val.ID,
 			Name:      val.Name,
-			Slug: val.Slug,
+			Slug:      val.Slug,
 			Address:   val.Address,
 			OpenTime:  val.OpenTime,
 			CloseTime: val.CloseTime,
@@ -163,23 +188,23 @@ func (c *coffeeShopRepository) GetCoffeeShops(ctx context.Context) ([]entity.Cof
 		}
 		coffeeEntity = append(coffeeEntity, coffeeEnt)
 	}
-	return coffeeEntity, nil
+	return coffeeEntity, countData, int64(totalPages), nil
 }
 
 // UpdateCoffeeShop implements [CoffeeShopRepository].
 func (c *coffeeShopRepository) UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity, idCoffeeShop int64) error {
 	modelCoffee := model.CoffeeShop{
-		Name: req.Name,
-		Slug: req.Slug,
-		Address: req.Address,
-		Latitude: req.Latitude,
-		Longitude: req.Longitude,
-		OpenTime: req.OpenTime,
-		CloseTime: req.CloseTime,
-		Instagram: req.Instagram,
+		Name:        req.Name,
+		Slug:        req.Slug,
+		Address:     req.Address,
+		Latitude:    req.Latitude,
+		Longitude:   req.Longitude,
+		OpenTime:    req.OpenTime,
+		CloseTime:   req.CloseTime,
+		Instagram:   req.Instagram,
 		UpdatedByID: req.UserUpdate.ID,
-		CategoryID: req.Category.ID,
-		IsActive: req.IsActive,
+		CategoryID:  req.Category.ID,
+		IsActive:    req.IsActive,
 	}
 	result := c.db.Where("id = ?", idCoffeeShop).Updates(modelCoffee)
 	if result.Error != nil {

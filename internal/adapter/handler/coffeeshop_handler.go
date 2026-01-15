@@ -20,11 +20,132 @@ type CoffeeShopHandler interface {
 	GetCoffeeShopByID(c *fiber.Ctx) error
 	UpdateCoffeeShop(c *fiber.Ctx) error
 	DeleteCoffeeShop(c *fiber.Ctx) error
+
+	//FE
+	GetCoffeeShopsWithQuery(c *fiber.Ctx) error
 }
 
 type coffeeShopHandler struct {
 	CoffeeShopService service.CoffeeShopService
 	ImageService      service.ImageService
+}
+
+// GetCoffeeShopsWithQuery implements [CoffeeShopHandler].
+func (f *coffeeShopHandler) GetCoffeeShopsWithQuery(c *fiber.Ctx) error {
+	var err error
+	var limit int64
+	var page int64
+	var categoryID int64
+	var errResp response.DefaultErrorResponse
+	var resp response.DefaultSuccessResponse
+
+	page = 1
+	if c.Query("page") != "" {
+		page, err = helper.StringToInt(c.Query("page"))
+		if err != nil {
+			code := "[HANDLER] GetCoffeeShopsWithQuery - 1"
+			log.Errorw(code, err)
+			errResp.Meta.Status = false
+			errResp.Meta.Message = "Invalid page number"
+			errResp.Meta.Errors = nil
+			return c.Status(fiber.StatusBadRequest).JSON(errResp)
+		}
+	}
+
+	limit = 6
+	if c.Query("limit") != "" {
+		limit, err = helper.StringToInt(c.Query("limit"))
+		if err != nil {
+			code := "[HANDLER] GetCoffeeShopsWithQuery - 2"
+			log.Errorw(code, err)
+			errResp.Meta.Status = false
+			errResp.Meta.Message = "Invalid list number"
+			errResp.Meta.Errors = nil
+			return c.Status(fiber.StatusBadRequest).JSON(errResp)
+		}
+	}
+
+	orderBy := "created_at"
+	if c.Query("orderBy") != "" {
+		orderBy = c.Query("orderBy")
+	}
+
+	orderType := "desc"
+	if c.Query("orderType") != "" {
+		orderType = c.Query("orderType")
+	}
+
+	search := ""
+	if c.Query("search") != "" {
+		search = c.Query("search")
+	}
+
+	categoryID = 0
+	if c.Query("categoryID") != "" {
+		categoryID, err = helper.StringToInt(c.Query("categoryID"))
+		if err != nil {
+			code := "[HANDLER] GetCoffeeShopsWithQuery - 3"
+			log.Errorw(code, err)
+			errResp.Meta.Status = false
+			errResp.Meta.Message = "category ID bla bla bla"
+			errResp.Meta.Errors = nil
+			return c.Status(fiber.StatusBadRequest).JSON(errResp)
+		}
+	}
+
+	reqEntity := entity.QueryString{
+		Limit:      int64(limit),
+		Page:       int64(page),
+		OrderBy:    orderBy,
+		OrderType:  orderType,
+		Search:     search,
+		Status:     true,
+		CategoryID: int64(categoryID),
+	}
+
+	results, totalData, totalPage, err := f.CoffeeShopService.GetCoffeeShops(c.Context(), reqEntity)
+	if err != nil {
+		code := "[HANDLER] GetCoffeeShopsWithQuery - 4"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	respDatas := make([]response.CoffeeShopsResponse, len(results))
+	for i, res := range results {
+		respImages := []response.ImagesCoffeeShopResponse{}
+		for _, image := range res.Image {
+			respImage := response.ImagesCoffeeShopResponse{
+				Image: image.Image,
+			}
+			respImages = append(respImages, respImage)
+		}
+
+		respDatas[i] = response.CoffeeShopsResponse{
+			ID:        res.ID,
+			Name:      res.Name,
+			Slug:      res.Slug,
+			Address:   res.Address,
+			OpenClose: helper.GenerateOpenTime(res.OpenTime, res.CloseTime),
+			Category:  res.Category.Name,
+			Images:    respImages,
+		}
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Fetched data coffee shops successfully"
+	resp.Meta.Errors = nil
+	resp.Data = respDatas
+	resp.Pagination = &response.PaginationResponse{
+		TotalRecords: totalData,
+		Page:         int64(page),
+		PerPage:      int64(limit),
+		TotalPages:   totalPage,
+	}
+
+	return c.JSON(resp)
 }
 
 // CreateCoffeeShop implements [CoffeeShopHandler].
@@ -259,7 +380,16 @@ func (f *coffeeShopHandler) GetCoffeeShops(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(errResp)
 	}
 
-	results, err := f.CoffeeShopService.GetCoffeeShops(c.Context())
+	reqEntity := entity.QueryString{
+		Limit:      10,
+		Page:       1,
+		OrderBy:    "",
+		OrderType:  "",
+		Search:     "",
+		CategoryID: 0,
+	}
+
+	results, _, _, err := f.CoffeeShopService.GetCoffeeShops(c.Context(), reqEntity)
 	if err != nil {
 		code := "[HANDLER] GetCoffeeShops - 1"
 		log.Errorw(code, err)
@@ -352,11 +482,11 @@ func (f *coffeeShopHandler) UpdateCoffeeShop(c *fiber.Ctx) error {
 	}
 
 	reqEntity := entity.CoffeeShopEntity{
-		Name: req.CoffeeShop,
-		Address: req.Address,
-		Latitude: req.Latitude,
+		Name:      req.CoffeeShop,
+		Address:   req.Address,
+		Latitude:  req.Latitude,
 		Longitude: req.Longitude,
-		OpenTime: req.OpenTime,
+		OpenTime:  req.OpenTime,
 		CloseTime: req.CloseTime,
 		Instagram: req.Instagram,
 		UserUpdate: entity.UserEntity{

@@ -11,7 +11,7 @@ import (
 
 type CoffeeShopService interface {
 	CreateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity) (int64, error)
-	GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error)
+	GetCoffeeShops(ctx context.Context, query entity.QueryString) ([]entity.CoffeeShopEntity, int64, int64, error)
 	GetCoffeeShopByID(ctx context.Context, id int64) (*entity.CoffeeShopEntity, error)
 	UpdateCoffeeShop(ctx context.Context, req entity.CoffeeShopEntity, idCoffeeShop int64) error
 	DeleteCoffeeShop(ctx context.Context, id int64) error
@@ -58,14 +58,14 @@ func (c *coffeeShopService) GetCoffeeShopByID(ctx context.Context, id int64) (*e
 }
 
 // GetCoffeeShops implements [CoffeeShopService].
-func (c *coffeeShopService) GetCoffeeShops(ctx context.Context) ([]entity.CoffeeShopEntity, error) {
-	results, err := c.CoffeeShopRepository.GetCoffeeShops(ctx)
+func (c *coffeeShopService) GetCoffeeShops(ctx context.Context, query entity.QueryString) ([]entity.CoffeeShopEntity, int64, int64, error) {
+	results, totalData, totalPages, err := c.CoffeeShopRepository.GetCoffeeShops(ctx, query)
 	if err != nil {
 		code := "[SERVICE] GetCoffeeShops - 1"
 		log.Errorw(code, err)
-		return nil, err
+		return nil, 0, 0, err
 	}
-	return results, nil
+	return results, totalData, totalPages, nil
 }
 
 // UpdateCoffeeShop implements [CoffeeShopService].

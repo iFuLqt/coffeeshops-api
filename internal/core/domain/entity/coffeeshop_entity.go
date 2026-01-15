@@ -20,3 +20,13 @@ type CoffeeShopEntity struct {
 	IsActive   *bool
 	UpdatedAt  time.Time
 }
+
+type QueryString struct {
+	Limit int64
+	Page int64
+	OrderBy string
+	OrderType string
+	Search string
+	CategoryID int64
+	Status bool
+}

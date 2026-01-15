@@ -100,6 +100,10 @@ func RunServer() {
 	facility.Delete("/:facilityID", facilityHandler.DeleteFacility)
 	facility.Put("/:facilityID", facilityHandler.UpdateFacility)
 
+
+	fe := api.Group("/fe")
+	fe.Get("/coffeeshops", coffeeShopHandler.GetCoffeeShopsWithQuery)
+
 	go func() {
 		if cfg.App.AppPort == "" {
 			cfg.App.AppPort = os.Getenv("APP_PORT")
