@@ -320,7 +320,7 @@ func (f *coffeeShopHandler) DeleteCoffeeShop(c *fiber.Ctx) error {
 
 	idParam := c.Params("coffeeshopID")
 	idCoffeeShop, err := helper.StringToInt(idParam)
-	if err != nil {
+	if err != nil || idCoffeeShop <= 0 {
 		code := "[HANDLER] DeleteCoffeeShop - 1"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
@@ -376,7 +376,7 @@ func (f *coffeeShopHandler) GetCoffeeShopByID(c *fiber.Ctx) error {
 
 	idParam := c.Params("coffeeshopID")
 	id, err := helper.StringToInt(idParam)
-	if err != nil {
+	if err != nil || id <= 0 {
 		errResp.Meta.Status = false
 		errResp.Meta.Message = "Coffee shop ID salah"
 		errResp.Meta.Errors = nil

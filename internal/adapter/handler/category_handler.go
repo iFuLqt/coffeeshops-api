@@ -107,7 +107,7 @@ func (f *categoryHandler) DeleteCategory(c *fiber.Ctx) error {
 
 	idParameter := c.Params("categoryID")
 	id, err := helper.StringToInt(idParameter)
-	if err != nil {
+	if err != nil || id <= 0 {
 		code := "[HANDLER] DeleteCategory - 1"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
@@ -202,7 +202,7 @@ func (f *categoryHandler) GetCategoryByID(c *fiber.Ctx) error {
 
 	idParameter := c.Params("categoryID")
 	id, err := helper.StringToInt(idParameter)
-	if err != nil {
+	if err != nil || id <= 0 {
 		code := "[HANDLER] GetCategoryByID - 1"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
@@ -256,7 +256,7 @@ func (f *categoryHandler) UpdateCategory(c *fiber.Ctx) error {
 
 	idParameter := c.Params("categoryID")
 	id, err := helper.StringToInt(idParameter)
-	if err != nil {
+	if err != nil || id <= 0{
 		code := "[HANDLER] UpdateCategory - 1"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false

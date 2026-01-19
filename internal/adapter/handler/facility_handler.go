@@ -110,7 +110,7 @@ func (f *facilityHandler) DeleteFacility(c *fiber.Ctx) error {
 
 	idParameter := c.Params("facilityID")
 	idFacility, err := helper.StringToInt(idParameter)
-	if err != nil {
+	if err != nil || idFacility <= 0{
 		code := "[HANDLER] DeleteFacility - 1"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
@@ -199,7 +199,7 @@ func (f *facilityHandler) UpdateFacility(c *fiber.Ctx) error {
 
 	idParameter := c.Params("facilityID")
 	idFacility, err := helper.StringToInt(idParameter)
-	if err != nil {
+	if err != nil || idFacility <= 0 {
 		code := "[HANDLER] UpdateFacility - 1"
 		log.Errorw(code, err)
 		errResp.Meta.Status = false
