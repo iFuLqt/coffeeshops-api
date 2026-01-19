@@ -149,7 +149,10 @@ func (c *coffeeShopRepository) GetCoffeeShops(ctx context.Context, query entity.
 		return nil, 0, 0, err
 	}
 
-	totalPages := int(math.Ceil(float64(countData) / float64(query.Limit)))
+	var totalPages int64 = 0
+	if countData > 0 {
+		totalPages = int64(math.Ceil(float64(countData) / float64(query.Limit)))
+	}
 
 	err = sqlMain.Order(order).Limit(int(query.Limit)).Offset(int(offset)).Find(&modelCoffe).Error
 	if err != nil {

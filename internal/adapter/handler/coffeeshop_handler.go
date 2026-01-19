@@ -23,11 +23,80 @@ type CoffeeShopHandler interface {
 
 	//FE
 	GetCoffeeShopsWithQuery(c *fiber.Ctx) error
+	GetDetailCoffeeShop(c *fiber.Ctx) error
 }
 
 type coffeeShopHandler struct {
 	CoffeeShopService service.CoffeeShopService
 	ImageService      service.ImageService
+}
+
+// GetDetailCoffeeShop implements [CoffeeShopHandler].
+func (f *coffeeShopHandler) GetDetailCoffeeShop(c *fiber.Ctx) error {
+	var resp response.DefaultSuccessResponse
+	var errResp response.DefaultErrorResponse
+
+	idParam := c.Params("coffeeshopID")
+	idCoffeeShop, err := helper.StringToInt(idParam)
+	if err != nil || idCoffeeShop <= 0 {
+		code := "[HANDLER] GetDetailCoffeeShop - 1"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Coffee shop ID must be integer"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusBadRequest).JSON(errResp)
+	}
+
+	result, err := f.CoffeeShopService.GetCoffeeShopByID(c.Context(), idCoffeeShop)
+	if err != nil {
+		code := "[HANDLER] GetDetailCoffeeShop - 2"
+		log.Errorw(code, err)
+		errResp.Meta.Status = false
+		errResp.Meta.Message = "Internal server error"
+		errResp.Meta.Errors = nil
+		return c.Status(fiber.StatusInternalServerError).JSON(errResp)
+	}
+
+	images := make([]response.ImagesCoffeeShopResponse, len(result.Image))
+	for i, res := range result.Image {
+		images[i] = response.ImagesCoffeeShopResponse{
+			Image:     res.Image,
+			IsPrimary: res.IsPrimary,
+		}
+	}
+
+	facilities := make([]response.FacilityResponse, len(result.Facility))
+	for i, res := range result.Facility {
+		facilities[i] = response.FacilityResponse{
+			Name: res.Name,
+		}
+	}
+
+	respData := response.CoffeeShopByIDResponse{
+		ID:        result.ID,
+		Name:      result.Name,
+		Slug:      result.Slug,
+		Address:   result.Address,
+		OpenClose: helper.GenerateOpenTime(result.OpenTime, result.CloseTime),
+		Facility:  facilities,
+		Maps:      helper.LinkGoogleMaps(result.Latitude, result.Longitude),
+		Instagram: helper.LinkInstagram(result.Instagram),
+		CreatedBy: &response.UserResponse{
+			Name: result.UserCreate.Name,
+		},
+		UpdatedBy: &response.UserResponse{
+			Name: result.UserUpdate.Name,
+		},
+		Images:    images,
+		UpdatedAt: result.UpdatedAt,
+	}
+
+	resp.Meta.Status = true
+	resp.Meta.Message = "Fetced detail coffee shop successfully"
+	resp.Meta.Errors = nil
+	resp.Data = respData
+
+	return c.JSON(resp)
 }
 
 // GetCoffeeShopsWithQuery implements [CoffeeShopHandler].

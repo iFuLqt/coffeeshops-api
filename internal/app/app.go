@@ -103,6 +103,7 @@ func RunServer() {
 
 	fe := api.Group("/fe")
 	fe.Get("/coffeeshops", coffeeShopHandler.GetCoffeeShopsWithQuery)
+	fe.Get("/coffeeshops/:coffeeshopID", coffeeShopHandler.GetDetailCoffeeShop)
 
 	go func() {
 		if cfg.App.AppPort == "" {
